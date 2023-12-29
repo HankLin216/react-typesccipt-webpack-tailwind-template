@@ -14,6 +14,7 @@ const devWebpackConfig = merge(baseConfig, {
   devServer: {
     port: 8080,
     open: true,
+    historyApiFallback: true,
   },
   plugins: [],
 });

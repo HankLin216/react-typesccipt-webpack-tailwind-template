@@ -7,8 +7,9 @@ const __dirname = path.dirname(__filename);
 
 export default {
   output: {
+    publicPath: '/',
     path: path.resolve(__dirname, './dist'),
-    filename: './js/[name]-bundle-[fullhash:8].js',
+    filename: 'js/[name]-bundle-[fullhash:8].js',
     clean: true,
   },
   resolve: {

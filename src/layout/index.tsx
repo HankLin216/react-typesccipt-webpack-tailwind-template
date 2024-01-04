@@ -3,8 +3,8 @@ import { Outlet } from 'react-router-dom'
 
 const Layout = () => {
   return (
-    <div>
-      <h1>Layout LALALA</h1>
+    <div className="container mx-auto">
+      <h1 className="text-3xl font-bold underline">Layout LALALA1</h1>
       <Outlet />
     </div>
   )

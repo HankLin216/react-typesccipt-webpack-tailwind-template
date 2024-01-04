@@ -23,19 +23,13 @@ export default {
         use: {
           loader: 'babel-loader',
         },
-      }, {
-        test: /\.module\.css$/,
+      },
+      {
+        test: /\.css$/,
         use: [
           'style-loader',
-          {
-            loader: 'css-loader',
-            options: {
-              modules: {
-                mode: 'local',
-                localIdentName: '[file]__[local]__[hash:6]',
-              },
-            },
-          },
+          'css-loader',
+          'postcss-loader'
         ],
       },
     ],

@@ -10,5 +10,8 @@
     "skipLibCheck": true,
     "sourceMap": true
   },
-  "include": ["./src/**/*", "**/*.mjs"]
+  "include": [
+    "./src/**/*",
+    "**/*.mjs"
+  ]
 }

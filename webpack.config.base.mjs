@@ -25,7 +25,22 @@ export default {
         },
       },
       {
-        test: /\.css$/,
+        test: /\.module\.css$/,
+        use: [
+          'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              modules: {
+                mode: 'local',
+                localIdentName: '[file]__[local]__[hash:6]',
+              },
+            },
+          },
+        ],
+      },
+      {
+        test: /^(?!.*module).*\.css/,
         use: [
           'style-loader',
           'css-loader',

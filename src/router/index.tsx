@@ -1,6 +1,6 @@
 import React from 'react'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import Layout from '../layouts'
+import { createBrowserRouter } from 'react-router-dom'
+import { HorizonTailwindReactAdmin } from '../layouts'
 import Home from '../pages/home'
 import About from '../pages/about'
 import ErrorPage from '../pages/error-page'
@@ -8,10 +8,11 @@ import ErrorPage from '../pages/error-page'
 const Router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: <HorizonTailwindReactAdmin />,
     children: [
       {
         index: true,
+        path: '/home',
         element: <Home />,
       },
       {

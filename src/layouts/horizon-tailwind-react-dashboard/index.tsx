@@ -6,7 +6,7 @@ const HorizonTailwindReactAdmin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-dvh w-full">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
       <div className="h-full w-full bg-lightPrimary">
         <main className={`mx-[12px] h-full flex-none transition-all md:pr-2 sm:ml-[313px]`}>

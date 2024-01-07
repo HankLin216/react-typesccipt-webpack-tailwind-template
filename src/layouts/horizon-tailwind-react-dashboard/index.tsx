@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Sidebar from './sidebar'
 import { Outlet } from 'react-router-dom'
 
@@ -6,7 +6,7 @@ const HorizonTailwindReactAdmin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   return (
-    <div className="flex h-full w-full">
+    <div className="flex h-screen w-full">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
       <div className="h-full w-full bg-lightPrimary">
         <main className={`mx-[12px] h-full flex-none transition-all md:pr-2 sm:ml-[313px]`}>

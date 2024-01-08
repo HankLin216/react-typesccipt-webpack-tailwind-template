@@ -2,7 +2,6 @@ import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import InfoIcon from '@mui/icons-material/Info'
-import HomeIcon from '@mui/icons-material/Home'
 
 interface MainLinkType {
   name: string
@@ -11,11 +10,6 @@ interface MainLinkType {
 }
 
 const mainLinks: MainLinkType[] = [
-  {
-    name: 'Home',
-    path: 'Home',
-    icon: <HomeIcon className="h-6 w-6"></HomeIcon>,
-  },
   {
     name: 'About',
     path: 'About',

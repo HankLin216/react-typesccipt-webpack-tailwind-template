@@ -58,7 +58,7 @@ export const SidebarLinks = (): JSX.Element => {
                 {route.name}
               </p>
             </li>
-            {activeRoute(route.path) ? (
+            {activeRoute(route.path) === true ? (
               <div className="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500" />
             ) : null}
           </div>

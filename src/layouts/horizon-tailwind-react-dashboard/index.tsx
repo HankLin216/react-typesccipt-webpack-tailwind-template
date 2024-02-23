@@ -14,7 +14,7 @@ const HorizonTailwindReactAdmin = () => {
       {/* Navbar & Main Content */}
       <div className="h-full w-full bg-lightPrimary">
         {/* Main Content */}
-        <main className={`mx-[12px] h-full flex-none transition-all md:pr-2 xl:ml-[313px]`}>
+        <main className={`mx-[12px] h-full flex-none transition-all md:pr-2 md:ml-[313px]`}>
           <div className="h-full">
             {/* Nav Bar */}
             <NavigationBar />

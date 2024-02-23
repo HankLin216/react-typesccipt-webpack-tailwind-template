@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import { HorizonTailwindReactAdmin } from '../layouts'
 import Home from '../pages/home'
 import About from '../pages/about'
+import Dashboard from '../pages/dashboard'
 import ErrorPage from '../pages/error-page'
 
 const Router = createBrowserRouter([
@@ -26,6 +27,10 @@ const Router = createBrowserRouter([
             element: <div>About me</div>,
           },
         ],
+      },
+      {
+        path: '/dashboard',
+        element: <Dashboard />,
       },
       {
         path: '*',

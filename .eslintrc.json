@@ -6,7 +6,7 @@
   "extends": [
     "plugin:react/recommended",
     "standard-with-typescript",
-    "eslint-config-prettier"
+    "prettier"
   ],
   "overrides": [],
   "parser": "@typescript-eslint/parser",
@@ -17,8 +17,9 @@
   },
   "plugins": [
     "react",
-    "@typescript-eslint",
-    "eslint-config-prettier"
+    "@typescript-eslint"
   ],
-  "rules": {}
+  "rules": {
+    "no-unused-vars": "error"
+  }
 }

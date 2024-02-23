@@ -13,7 +13,7 @@ const Sidebar = (props: SidebarProps) => {
     <div
       className="sm:none duration-175 linear fixed !z-50 flex min-h-full flex-col
        bg-white pb-10 shadow-2xl shadow-white/5 transition-all md:!z-50 lg:!z-50 xl:!z-0
-       sm:translate-x-0 -translate-x-96"
+       md:translate-x-0 -translate-x-96"
     >
       {/* Header */}
       <div className={`mx-[56px] mt-[50px] flex items-center`}>

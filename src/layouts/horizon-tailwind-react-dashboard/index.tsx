@@ -4,7 +4,7 @@ import NavigationBar from './navigation-bar'
 import Footer from './footer'
 import { Outlet } from 'react-router-dom'
 
-const HorizonTailwindReactAdmin = () => {
+const HorizonTailwindReactAdmin = (): JSX.Element => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   return (

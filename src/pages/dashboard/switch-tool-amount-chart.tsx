@@ -3,25 +3,22 @@ import * as Highcharts from 'highcharts'
 import HighchartsReact, { type HighchartsReactRefObject } from 'highcharts-react-official'
 import moment from 'moment'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
-import Yaya12085Button from './yaya12085-button'
+import Yaya12085Button from '../../components/button/yaya12085-button'
 import loadingGif from '../../assets/gif/Walk.gif'
+import { splitTimeRange } from '../../utils/time'
+import type { ITimeRange } from '../../types/time'
 
 const baseUrl = 'http://192.168.197.93:9001/v1'
 // const baseUrl = 'http://192.168.43.139:8000/v1'
 
 // interface
-interface ITimeRange {
-  startAt: moment.Moment
-  endAt: moment.Moment
-}
-
 interface ISwtichToolLogRequest extends ITimeRange {}
 
 interface ISwtichToolLogResponse {
-  switchToolLogs: ISwtichToolLog[]
+  switchToolLogsDetail: ISwtichToolLogDetail[]
 }
 
-interface ISwtichToolLog {
+interface ISwtichToolLogDetail {
   message: string
   testerName: string
   currentTool: string
@@ -69,27 +66,6 @@ interface ISwitchToolAmountChartData {
 }
 
 // function
-const splitTimeRange = (range: ITimeRange, size: number): ITimeRange[] => {
-  const ret: ITimeRange[] = []
-  if (size <= 0) {
-    return ret
-  }
-
-  const startDate = range.startAt.clone()
-  while (!startDate.isAfter(range.endAt)) {
-    const endDate = startDate.clone().add(size, 'days')
-    ret.push({
-      startAt: startDate.clone(),
-      endAt: endDate.isAfter(range.endAt) ? range.endAt : endDate,
-    })
-
-    // update
-    startDate.add(size, 'days')
-  }
-
-  return ret
-}
-
 const buildWeeks = (startAt: moment.Moment, endAt: moment.Moment): string[] => {
   const weeks: string[] = []
   while (startAt.isBefore(endAt)) {
@@ -101,7 +77,7 @@ const buildWeeks = (startAt: moment.Moment, endAt: moment.Moment): string[] => {
   return weeks
 }
 
-const processRawSwtichToolLogs = (data: ISwtichToolLog[], timeRange: ITimeRange, objectIc?: string[]): ISwtichToolAmountOfIC[] => {
+const processRawSwtichToolLogs = (data: ISwtichToolLogDetail[], timeRange: ITimeRange, objectIc?: string[]): ISwtichToolAmountOfIC[] => {
   // get all objectIc from data
   if (objectIc === undefined) {
     const icSet = new Set<string>()
@@ -299,7 +275,7 @@ const getAmountOfSwitchToolChartOptions = (data: ISwitchToolAmountChartData): Hi
 
 // async function
 async function getRawSwtichToolLogs(req: ISwtichToolLogRequest): Promise<ISwtichToolLogResponse> {
-  const res = await fetch(`${baseUrl}/switch_tool_logs_detail`, {
+  const res = await fetch(`${baseUrl}/switch_tool_log_detail`, {
     method: 'POST',
     body: JSON.stringify(req),
   })
@@ -354,10 +330,10 @@ const asyncFetchData = async (range: ITimeRange): Promise<ISwitchToolAmountChart
     }
 
     // await all fetch
-    const allLogs: ISwtichToolLog[] = []
+    const allLogs: ISwtichToolLogDetail[] = []
     const logRess = await Promise.all(logRequests)
     for (const res of logRess) {
-      allLogs.push(...res.switchToolLogs)
+      allLogs.push(...res.switchToolLogsDetail)
     }
 
     const allProgress: IProjectProgress[] = []
@@ -386,9 +362,10 @@ const SwitchToolAmountChart = (): JSX.Element => {
     aveProjectProgressOfICByWeeks: [],
   })
   const [startDateTime, setStartDateTime] = useState<moment.Moment | null>(
-    moment().add(-7, 'days').startOf('day').clone().hours(0).minutes(0).seconds(0).milliseconds(0)
+    moment().add(-1, 'days').startOf('day').clone().hours(0).minutes(0).seconds(0).milliseconds(0)
   )
   const [endDateTime, setEndDateTime] = useState<moment.Moment | null>(moment())
+
   const chartRef = useRef<HighchartsReactRefObject | null>(null)
 
   const options = getAmountOfSwitchToolChartOptions(switchToolAmountChartData)
@@ -412,17 +389,18 @@ const SwitchToolAmountChart = (): JSX.Element => {
       .then((data) => {
         setSwitchToolAmountChartData(data)
         console.log('fetch data at init success')
-
-        if (chartRef.current !== null) {
-          chartRef.current.chart.hideLoading()
-        }
       })
       .catch((e) => {
         console.error(e)
       })
+      .finally(() => {
+        if (chartRef.current !== null) {
+          chartRef.current.chart.hideLoading()
+        }
+      })
   }, [])
 
-  // click button effect
+  // click button event
   const handleButtonClick = (): void => {
     if (startDateTime === null || endDateTime === null) {
       return
@@ -446,20 +424,22 @@ const SwitchToolAmountChart = (): JSX.Element => {
       .then((data) => {
         setSwitchToolAmountChartData(data)
         console.log('fetch data by button success')
-
-        if (chartRef.current !== null) {
-          chartRef.current.chart.hideLoading()
-        }
       })
       .catch((e) => {
         console.error(e)
       })
+      .finally(() => {
+        if (chartRef.current !== null) {
+          chartRef.current.chart.hideLoading()
+        }
+      })
   }
 
   return (
-    <div className="m-2">
-      <h2 className="mb-8 font-bold">Switch Tool Amount Chart</h2>
+    <div>
+      <h1 className="mb-8 font-bold">Switch Tool Amount Chart</h1>
       <div className="grid grid-cols-3 gap-1">
+        {/* plot */}
         <div className="col-span-2">
           {/* tool menu */}
           <div className="grid grid-cols-12 gap-1 mb-5">
@@ -496,8 +476,8 @@ const SwitchToolAmountChart = (): JSX.Element => {
             <HighchartsReact highcharts={Highcharts} options={options} ref={chartRef} />
           </div>
         </div>
+        {/* description */}
         <div className="col-span-1">
-          {/* description */}
           <div className="p-2">Desc...</div>
         </div>
       </div>
@@ -505,4 +485,4 @@ const SwitchToolAmountChart = (): JSX.Element => {
   )
 }
 
-export { SwitchToolAmountChart }
+export default SwitchToolAmountChart

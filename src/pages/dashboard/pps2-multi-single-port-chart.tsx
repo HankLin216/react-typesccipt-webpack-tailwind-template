@@ -69,8 +69,8 @@ const getRawPPS2MultiSinglePortLogs = async (req: IPPS2MultiSinglePortLogRequest
 }
 
 const asyncFetchData = async (range: ITimeRange): Promise<IPieChartData> => {
-  // split time range into parts that each part is 10 days
-  const timeRanges: ITimeRange[] = splitTimeRange(range, 10)
+  // split time range into parts that each part is n days
+  const timeRanges: ITimeRange[] = splitTimeRange(range, 3)
 
   const ret: IPieChartData = {
     envCount: [],
@@ -99,7 +99,6 @@ const asyncFetchData = async (range: ITimeRange): Promise<IPieChartData> => {
 }
 
 // function
-
 const getEnvCountChartOptions = (data: IPieChartData): Highcharts.Options => {
   const envData: Highcharts.PointOptionsObject[] = []
 
@@ -336,9 +335,6 @@ const processMultiIcFwCount = (logs: IPPS2MultiSinglePortLogDetail[], refData: I
     }
   }
 
-  console.log('icByfw', icByfw)
-  console.log('fwCountByServerPort', fwCountByServerPort)
-
   // get the ave of fw count
   const aveFWCount: Record<string, number> = {}
   for (const serverPort in fwCountByServerPort) {
@@ -356,8 +352,6 @@ const processMultiIcFwCount = (logs: IPPS2MultiSinglePortLogDetail[], refData: I
       aveFWCount[fw] += Math.ceil(fc[fw] / logsCountOfEachPort)
     }
   }
-
-  console.log('aveFWCount', aveFWCount)
 
   // get summary of ic count
   const icCount: Record<string, number> = {}
@@ -394,8 +388,6 @@ const processMultiIcFwCount = (logs: IPPS2MultiSinglePortLogDetail[], refData: I
   for (const fw in aveFWCount) {
     refData.multiFwCount.push({ name: fw, value: aveFWCount[fw] })
   }
-
-  console.log(refData)
 }
 
 // components
@@ -507,7 +499,7 @@ const PPS2MultiSinglePortChart = (): JSX.Element => {
         {/* plot */}
         <div className="col-span-2">
           {/* tool menu */}
-          <div className="grid grid-cols-12 gap-1 mb-5">
+          <div className="grid grid-cols-12 gap-1 mb-5 h-[50px]">
             {/* date time picker */}
             <div className="col-span-2 text-center self-center">Time From:</div>
             <div className="col-span-3">

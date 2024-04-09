@@ -37,12 +37,17 @@ interface IPPS2MultiSinglePortSample {
 interface IPieChartData {
   envCount: IPieSubData[]
   multiIcCount: IPieSubData[]
+  multiFwCount: IPieSubData[]
 }
 
 interface IPieSubData {
   name: string
   value: number
 }
+
+// property
+const icByfw: Record<string, string> = {}
+const colorByIc: Record<string, string | Highcharts.GradientColorObject | Highcharts.PatternObject> = {}
 
 // async function
 const getRawPPS2MultiSinglePortLogs = async (req: IPPS2MultiSinglePortLogRequest): Promise<IPPS2MultiSinglePortLogResponse> => {
@@ -70,6 +75,7 @@ const asyncFetchData = async (range: ITimeRange): Promise<IPieChartData> => {
   const ret: IPieChartData = {
     envCount: [],
     multiIcCount: [],
+    multiFwCount: [],
   }
 
   const logRequests: Array<Promise<IPPS2MultiSinglePortLogResponse>> = []
@@ -87,12 +93,13 @@ const asyncFetchData = async (range: ITimeRange): Promise<IPieChartData> => {
 
   // process data
   processEnvCount(allLogs, ret)
-  processMultiIcCount(allLogs, ret)
+  processMultiIcFwCount(allLogs, ret)
 
   return ret
 }
 
 // function
+
 const getEnvCountChartOptions = (data: IPieChartData): Highcharts.Options => {
   const envData: Highcharts.PointOptionsObject[] = []
 
@@ -143,14 +150,39 @@ const getEnvCountChartOptions = (data: IPieChartData): Highcharts.Options => {
   return options
 }
 
-const getIcCountChartOptions = (data: IPieChartData): Highcharts.Options => {
+const getIcWithFwCountChartOptions = (data: IPieChartData): Highcharts.Options => {
   const icData: Highcharts.PointOptionsObject[] = []
+  const fwData: Highcharts.PointOptionsObject[] = []
 
   for (const d of data.multiIcCount) {
+    // get ic color
     icData.push({
       name: d.name,
-      sliced: d.name === 'PS5027',
       y: d.value,
+      color: colorByIc[d.name],
+    })
+  }
+
+  for (const d of data.multiFwCount) {
+    // get the ic
+    const ic = icByfw[d.name]
+
+    // get the total count of the ic
+    let total = 0
+    for (const icd of data.multiIcCount) {
+      if (icd.name === ic) {
+        total = icd.value
+        break
+      }
+    }
+
+    // get the percentage
+    const brightness = 0.2 - d.value / total / 6
+
+    fwData.push({
+      name: d.name,
+      y: d.value,
+      color: Highcharts.color(colorByIc[ic]).brighten(brightness).get(),
     })
   }
 
@@ -181,11 +213,32 @@ const getIcCountChartOptions = (data: IPieChartData): Highcharts.Options => {
   options.series = [
     {
       type: 'pie',
-      name: 'Ave. Count',
+      name: 'IC Ave. Count',
       data: icData,
+      size: '45%',
       dataLabels: {
-        enabled: true,
-        format: `<b>{point.name}</b>: {point.y} ({point.percentage:.1f}%)`,
+        color: '#ffffff',
+        distance: '-50%',
+        format: `<b>{point.name}</b>({point.percentage:.1f}%)`,
+      },
+    },
+    {
+      type: 'pie',
+      name: 'Fw Ave. Count',
+      data: fwData,
+      size: '80%',
+      innerSize: '60%',
+      dataLabels: {
+        distance: 20,
+        format: '<b>{point.name}:</b> <span style="opacity: 0.5">{y}%</span>',
+        filter: {
+          property: 'y',
+          operator: '>',
+          value: 1,
+        },
+        style: {
+          fontWeight: 'normal',
+        },
       },
     },
   ]
@@ -217,13 +270,13 @@ const processEnvCount = (logs: IPPS2MultiSinglePortLogDetail[], refData: IPieCha
     const counts = allNormalCountByServerPort[serverPort]
     const total = counts.reduce((acc, cur) => acc + cur, 0)
     //  round to one decimal place
-    aveNormalCountByServerPort[serverPort] = Math.round(10 * (total / counts.length)) / 10
+    aveNormalCountByServerPort[serverPort] = Math.ceil(total / counts.length)
 
     // multi
     const multiCounts = allMultiCountByServerPort[serverPort]
     const multiTotal = multiCounts.reduce((acc, cur) => acc + cur, 0)
     //  round to one decimal place
-    aveMutliCountByServerPort[serverPort] = Math.round(10 * (multiTotal / multiCounts.length)) / 10
+    aveMutliCountByServerPort[serverPort] = Math.ceil(multiTotal / multiCounts.length)
   }
 
   // summary all ports
@@ -242,8 +295,7 @@ const processEnvCount = (logs: IPPS2MultiSinglePortLogDetail[], refData: IPieCha
   refData.envCount.push({ name: 'Multi-single port', value: totalMultiCount })
 }
 
-const processMultiIcCount = (logs: IPPS2MultiSinglePortLogDetail[], refData: IPieChartData): void => {
-  const serverLogsCountByServerPort: Record<string, number> = {}
+const processMultiIcFwCount = (logs: IPPS2MultiSinglePortLogDetail[], refData: IPieChartData): void => {
   const SamplesByServerPort: Record<string, IPPS2MultiSinglePortSample[][]> = {}
   for (const log of logs) {
     if (log.pps2MultiSinglePortSamples.length === 0) {
@@ -254,86 +306,96 @@ const processMultiIcCount = (logs: IPPS2MultiSinglePortLogDetail[], refData: IPi
       SamplesByServerPort[log.serverPort] = []
     }
 
-    if (typeof serverLogsCountByServerPort[log.serverPort] === 'undefined') {
-      serverLogsCountByServerPort[log.serverPort] = 0
-    }
-
-    if (typeof SamplesByServerPort[log.serverPort][serverLogsCountByServerPort[log.serverPort]] === 'undefined') {
-      SamplesByServerPort[log.serverPort][serverLogsCountByServerPort[log.serverPort]] = []
-    }
-
-    SamplesByServerPort[log.serverPort][serverLogsCountByServerPort[log.serverPort]].push(...log.pps2MultiSinglePortSamples)
-    serverLogsCountByServerPort[log.serverPort]++
+    SamplesByServerPort[log.serverPort].push(log.pps2MultiSinglePortSamples)
   }
 
-  // 統計每個log中在每個server port的ic數量
-  const SamplesICCountOfEachLogByServerPort: Record<string, Array<Record<string, number>>> = {}
-  for (const sp in SamplesByServerPort) {
-    const d = SamplesByServerPort[sp]
+  // 統計各server port中的fw各自的數量
 
-    if (typeof SamplesICCountOfEachLogByServerPort[sp] === 'undefined') {
-      SamplesICCountOfEachLogByServerPort[sp] = []
+  const fwCountByServerPort: Record<string, Record<string, number>> = {}
+  for (const serverPort in SamplesByServerPort) {
+    // the logs of each server port
+    const logsOfEachPort = SamplesByServerPort[serverPort]
+
+    if (typeof fwCountByServerPort[serverPort] === 'undefined') {
+      fwCountByServerPort[serverPort] = {}
     }
 
-    // very log
-    for (const sd of d) {
-      const icCount: Record<string, number> = {}
-      for (const s of sd) {
-        if (typeof icCount[s.ic] === 'undefined') {
-          icCount[s.ic] = 0
+    // record the fw counr
+    for (const log of logsOfEachPort) {
+      for (const s of log) {
+        if (typeof fwCountByServerPort[serverPort][s.fw] === 'undefined') {
+          fwCountByServerPort[serverPort][s.fw] = 0
         }
-        icCount[s.ic]++
-      }
+        fwCountByServerPort[serverPort][s.fw]++
 
-      SamplesICCountOfEachLogByServerPort[sp].push(icCount)
-    }
-  }
-
-  // 統計每個server port的ic平均數量
-  const aveICCountByServerPort: Record<string, Record<string, number>> = {}
-  for (const sp in SamplesICCountOfEachLogByServerPort) {
-    const d = SamplesICCountOfEachLogByServerPort[sp]
-    if (typeof aveICCountByServerPort[sp] === 'undefined') {
-      aveICCountByServerPort[sp] = {}
-    }
-
-    const counts: Record<string, number> = {}
-    for (const icCountOfEachLog of d) {
-      for (const ic in icCountOfEachLog) {
-        if (typeof aveICCountByServerPort[sp][ic] === 'undefined') {
-          aveICCountByServerPort[sp][ic] = 0
+        // also record the fw belong to which ic
+        if (icByfw[s.fw] === undefined) {
+          icByfw[s.fw] = s.ic
         }
-
-        if (typeof counts[ic] === 'undefined') {
-          counts[ic] = 0
-        }
-
-        aveICCountByServerPort[sp][ic] += icCountOfEachLog[ic]
-        counts[ic]++
       }
     }
-
-    for (const ic in aveICCountByServerPort[sp]) {
-      aveICCountByServerPort[sp][ic] = Math.round(10 * (aveICCountByServerPort[sp][ic] / counts[ic])) / 10
-    }
   }
 
-  // summary all ic of ports
-  const allICCount: Record<string, number> = {}
-  for (const serverPort in aveICCountByServerPort) {
-    for (const ic in aveICCountByServerPort[serverPort]) {
-      if (typeof allICCount[ic] === 'undefined') {
-        allICCount[ic] = 0
+  console.log('icByfw', icByfw)
+  console.log('fwCountByServerPort', fwCountByServerPort)
+
+  // get the ave of fw count
+  const aveFWCount: Record<string, number> = {}
+  for (const serverPort in fwCountByServerPort) {
+    // whole fw count by server port
+    const fc = fwCountByServerPort[serverPort]
+
+    // get the total count of logs of each server port
+    const logsCountOfEachPort = SamplesByServerPort[serverPort].length
+
+    for (const fw in fc) {
+      if (typeof aveFWCount[fw] === 'undefined') {
+        aveFWCount[fw] = 0
       }
 
-      allICCount[ic] += aveICCountByServerPort[serverPort][ic]
+      aveFWCount[fw] += Math.ceil(fc[fw] / logsCountOfEachPort)
     }
   }
 
-  // convert ot ret data
-  for (const ic in allICCount) {
-    refData.multiIcCount.push({ name: ic, value: allICCount[ic] })
+  console.log('aveFWCount', aveFWCount)
+
+  // get summary of ic count
+  const icCount: Record<string, number> = {}
+  for (const fw in aveFWCount) {
+    if (typeof icCount[icByfw[fw]] === 'undefined') {
+      icCount[icByfw[fw]] = 0
+    }
+
+    icCount[icByfw[fw]] += aveFWCount[fw]
   }
+
+  // create color index
+  for (const ic in icCount) {
+    // create color
+    if (colorByIc[ic] === undefined) {
+      // get random color form the color list
+      const colors = Highcharts.getOptions().colors
+      if (colors === undefined) {
+        continue
+      }
+
+      const randomIndex = Math.floor(Math.random() * colors.length)
+      colorByIc[ic] = colors[randomIndex]
+    }
+  }
+
+  // convert to refData
+  // 1. ic count
+  for (const ic in icCount) {
+    refData.multiIcCount.push({ name: ic, value: icCount[ic] })
+  }
+
+  // 2. fw count
+  for (const fw in aveFWCount) {
+    refData.multiFwCount.push({ name: fw, value: aveFWCount[fw] })
+  }
+
+  console.log(refData)
 }
 
 // components
@@ -341,6 +403,7 @@ const PPS2MultiSinglePortChart = (): JSX.Element => {
   const [pieChartData, setPieChartData] = useState<IPieChartData>({
     envCount: [],
     multiIcCount: [],
+    multiFwCount: [],
   })
   const [startDateTime, setStartDateTime] = useState<moment.Moment | null>(
     moment().add(-1, 'hours').startOf('day').clone().hours(0).minutes(0).seconds(0).milliseconds(0)
@@ -351,7 +414,7 @@ const PPS2MultiSinglePortChart = (): JSX.Element => {
   const icCountChartRef = useRef<HighchartsReactRefObject | null>(null)
 
   const envCountChartOptions = getEnvCountChartOptions(pieChartData)
-  const icCountChartOptions = getIcCountChartOptions(pieChartData)
+  const icWithFwCountChartOptions = getIcWithFwCountChartOptions(pieChartData)
 
   // effect
   useEffect(() => {
@@ -475,12 +538,12 @@ const PPS2MultiSinglePortChart = (): JSX.Element => {
           </div>
 
           {/* chart */}
-          <div className="grid grid-cols-2 gap-1">
-            <div>
+          <div className="grid grid-cols-5 gap-1">
+            <div className="col-span-2">
               <HighchartsReact highcharts={Highcharts} options={envCountChartOptions} ref={envCountChartRef} />
             </div>
-            <div>
-              <HighchartsReact highcharts={Highcharts} options={icCountChartOptions} ref={icCountChartRef} />
+            <div className="col-span-3">
+              <HighchartsReact highcharts={Highcharts} options={icWithFwCountChartOptions} ref={icCountChartRef} />
             </div>
           </div>
         </div>

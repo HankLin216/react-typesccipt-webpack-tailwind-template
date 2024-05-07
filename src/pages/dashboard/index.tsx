@@ -1,15 +1,19 @@
 import React from 'react'
 import SwitchToolAmountChart from './switch-tool-amount-chart'
 import PPS2MultiSinglePortChart from './pps2-multi-single-port-chart'
+import MpCountChart from './mp-count-chart'
 
 const Dashboard = (): JSX.Element => {
   return (
-    <div style={{ border: '1px solid red' }}>
-      <div style={{ border: '1px solid blue' }}>
+    <div>
+      <div>
         <SwitchToolAmountChart></SwitchToolAmountChart>
       </div>
-      <div style={{ border: '1px solid green' }}>
+      <div>
         <PPS2MultiSinglePortChart></PPS2MultiSinglePortChart>
+      </div>
+      <div>
+        <MpCountChart></MpCountChart>
       </div>
     </div>
   )

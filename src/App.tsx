@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import Router from './router'
+import { Router } from './router'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
 import { RouterProvider } from 'react-router-dom'

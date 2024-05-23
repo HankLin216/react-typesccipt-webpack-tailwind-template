@@ -6,8 +6,8 @@ interface SidebarProps {
   setOpen: (arg0: boolean) => void
 }
 
-const Sidebar = (props: SidebarProps) => {
-  const { open, setOpen } = props
+const Sidebar = (props: SidebarProps): JSX.Element => {
+  // const { open, setOpen } = props
 
   return (
     <div
@@ -26,9 +26,9 @@ const Sidebar = (props: SidebarProps) => {
       <div className="mt-[58px] mb-7 h-px bg-gray-300" />
 
       {/* Nav */}
-      <ul className="mb-auto pt-1">
+      <div className="mb-auto pt-1">
         <SidebarLinks></SidebarLinks>
-      </ul>
+      </div>
     </div>
   )
 }

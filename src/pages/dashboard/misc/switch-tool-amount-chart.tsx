@@ -8,9 +8,6 @@ import loadingGif from '../../../assets/gif/Walk.gif'
 import { splitTimeRange } from '../../../utils/time'
 import type { ITimeRange } from '../../../types/time'
 
-const baseUrl = 'http://192.168.197.93:9001/v1'
-// const baseUrl = 'http://192.168.43.139:8000/v1'
-
 // interface
 interface ISwtichToolLogRequest extends ITimeRange {}
 
@@ -275,7 +272,7 @@ const getAmountOfSwitchToolChartOptions = (data: ISwitchToolAmountChartData): Hi
 
 // async function
 async function getRawSwtichToolLogs(req: ISwtichToolLogRequest): Promise<ISwtichToolLogResponse> {
-  const res = await fetch(`${baseUrl}/switch_tool_log_detail`, {
+  const res = await fetch(`${process.env.TIC_BASE_URL}/switch_tool_log_detail`, {
     method: 'POST',
     body: JSON.stringify(req),
   })
@@ -288,7 +285,7 @@ async function getRawSwtichToolLogs(req: ISwtichToolLogRequest): Promise<ISwtich
 }
 
 async function getRawListProjectProgress(req: IListProjectProgressRequest): Promise<IListProjectProgressResponse> {
-  const res = await fetch(`${baseUrl}/project/progress`, {
+  const res = await fetch(`${process.env.TIC_BASE_URL}/project/progress`, {
     method: 'POST',
     body: JSON.stringify(req),
   })

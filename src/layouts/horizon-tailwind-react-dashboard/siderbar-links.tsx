@@ -113,7 +113,7 @@ export const SidebarLinks = (): JSX.Element => {
         )
       } else {
         navs.push(
-          <>
+          <React.Fragment key={index}>
             <div
               className="relative mb-3 flex hover:cursor-pointer"
               onClick={() => {
@@ -154,7 +154,7 @@ export const SidebarLinks = (): JSX.Element => {
                 )
               })}
             </div>
-          </>
+          </React.Fragment>
         )
       }
     })

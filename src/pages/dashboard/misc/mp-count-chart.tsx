@@ -7,8 +7,6 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import Yaya12085Button from '../../../components/button/yaya12085-button'
 import type { ITimeRange } from '../../../types/time'
 
-const baseUrl = 'http://192.168.197.93:9001/v1'
-
 interface IMPCountOfIC {
   ic: string
   categories: string[]
@@ -168,7 +166,7 @@ function processMPLogs(data: IMPLog[], timeRange: ITimeRange): IMPCountOfIC[] {
 }
 
 async function getRawMPLogs(req: IMPLogRequest): Promise<IMPLogResponse> {
-  const res = await fetch(`${baseUrl}/mp_logs`, {
+  const res = await fetch(`${process.env.TIC_BASE_URL}/mp_logs`, {
     method: 'POST',
     body: JSON.stringify(req),
   })

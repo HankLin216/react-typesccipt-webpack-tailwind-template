@@ -6,12 +6,15 @@ import Home from '../pages/home'
 import About from '../pages/about'
 import Dashboard from '../pages/dashboard/misc'
 import MPRecordDashboard from '../pages/dashboard/mp-record'
+import Mst from '../pages/management/mst'
 import ErrorPage from '../pages/error-page'
 // icons
 import InfoIcon from '@mui/icons-material/Info'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices'
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'
+import SettingsIcon from '@mui/icons-material/Settings'
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 
 export interface IMainLinkType {
   name: string
@@ -49,6 +52,18 @@ const NavLinks: IMainLinkType[] = [
         path: '/dashboard/mp-record',
         element: <MPRecordDashboard />,
         icon: <SpaceDashboardIcon></SpaceDashboardIcon>,
+      },
+    ],
+  },
+  {
+    name: 'Management',
+    icon: <SettingsIcon></SettingsIcon>,
+    sublinks: [
+      {
+        name: 'Mst',
+        path: '/Management/mst',
+        element: <Mst />,
+        icon: <RadioButtonUncheckedIcon></RadioButtonUncheckedIcon>,
       },
     ],
   },

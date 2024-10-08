@@ -8,9 +8,6 @@ import HighchartsReact, { type HighchartsReactRefObject } from 'highcharts-react
 import CatracoButton from '../../../components/button/catraco'
 import loadingGif from '../../../assets/gif/Ghost.gif'
 
-const baseUrl = 'http://192.168.197.93:9001/v1'
-// const baseUrl = 'http://192.168.43.139:8000/v1'
-
 interface IPPS2MultiSinglePortLogRequest extends ITimeRange {}
 
 interface IPPS2MultiSinglePortLogResponse {
@@ -51,7 +48,7 @@ const colorByIc: Record<string, string | Highcharts.GradientColorObject | Highch
 
 // async function
 const getRawPPS2MultiSinglePortLogs = async (req: IPPS2MultiSinglePortLogRequest): Promise<IPPS2MultiSinglePortLogResponse> => {
-  const url = `${baseUrl}/multi_single_port_log_detail`
+  const url = `${process.env.TIC_BASE_URL}/multi_single_port_log_detail`
   const res = await fetch(url, {
     method: 'POST',
     headers: {

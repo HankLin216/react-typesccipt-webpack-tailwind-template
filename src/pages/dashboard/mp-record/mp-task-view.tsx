@@ -11,11 +11,13 @@ import {
 import { GetMPTaskView } from '../../../biz/mp-record'
 import DebouncedInput from '../../../components/input/debounce-input'
 import moment from 'moment'
+import Button17 from '../../../components/button/button-17'
 // types
 import type { IMPTaskTableView } from '../../../biz/mp-record'
 import type { Column, RowData, SortingState, PaginationState, ColumnFiltersState, Row } from '@tanstack/react-table'
 // icons
 import FilterListIcon from '@mui/icons-material/FilterList'
+import FilterAltIcon from '@mui/icons-material/FilterAlt'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp'
 // css
@@ -108,40 +110,100 @@ const defaultColumns = [
     id: 'ForcePcieFlowName',
     header: 'Force PCIe Flow',
     cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
   }),
   columnHelper.accessor((props) => props.ForceBootCodeName, {
     id: 'ForceBootCodeName',
     header: 'Force Boot Code',
     cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
   }),
-  columnHelper.accessor((props) => props.UserRealName, { id: 'UserRealName', header: 'User Name', cell: (info) => info.getValue() }),
-  columnHelper.accessor((props) => props.IP, { id: 'Ip', header: 'IP', cell: (info) => info.getValue() }),
-  columnHelper.accessor((props) => props.ControllerID, { id: 'ControllerID', header: 'Controller ID', cell: (info) => info.getValue() }),
-  columnHelper.accessor((props) => props.IC, { id: 'Ic', header: 'IC', cell: (info) => info.getValue() }),
-  columnHelper.accessor((props) => props.FwVersion, { id: 'FwVersion', header: 'Fw Version', cell: (info) => info.getValue() }),
-  columnHelper.accessor((props) => props.FwSubVersion, { id: 'FwSubVersion', header: 'Fw Subversion', cell: (info) => info.getValue() }),
-  columnHelper.accessor((props) => props.MpErrorCode, { id: 'MpErrorCode', header: 'Error Code', cell: (info) => info.getValue() }),
-  columnHelper.accessor((props) => props.MpResultName, { id: 'MpResultName', header: 'MP Result', cell: (info) => info.getValue() }),
+  columnHelper.accessor((props) => props.UserRealName, {
+    id: 'UserRealName',
+    header: 'User Name',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
+  columnHelper.accessor((props) => props.IP, { id: 'Ip', header: 'IP', cell: (info) => info.getValue(), filterFn: ContainInArray }),
+  columnHelper.accessor((props) => props.ControllerID, {
+    id: 'ControllerID',
+    header: 'Controller ID',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
+  columnHelper.accessor((props) => props.IC, { id: 'Ic', header: 'IC', cell: (info) => info.getValue(), filterFn: ContainInArray }),
+  columnHelper.accessor((props) => props.FwVersion, {
+    id: 'FwVersion',
+    header: 'Fw Version',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
+  columnHelper.accessor((props) => props.FwSubVersion, {
+    id: 'FwSubVersion',
+    header: 'Fw Subversion',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
+  columnHelper.accessor((props) => props.MpErrorCode, {
+    id: 'MpErrorCode',
+    header: 'Error Code',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
+  columnHelper.accessor((props) => props.MpResultName, {
+    id: 'MpResultName',
+    header: 'MP Result',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
   columnHelper.accessor((props) => props.MpEnvironmentName, {
     id: 'MpEnvironmentName',
     header: 'Environment',
     cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
   }),
-  columnHelper.accessor((props) => props.TkId, { id: 'TkId', header: 'Task ID', cell: (info) => info.getValue() }),
-  columnHelper.accessor((props) => props.IdleStartTime, { id: 'IdleStartTime', header: 'Build At', cell: (info) => info.getValue() }),
+  columnHelper.accessor((props) => props.TkId, {
+    id: 'TkId',
+    header: 'Task ID',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
+  columnHelper.accessor((props) => props.IdleStartTime, {
+    id: 'IdleStartTime',
+    header: 'Build At',
+    cell: (info) => info.getValue(),
+    enableColumnFilter: false,
+  }),
   columnHelper.accessor((props) => props.PrepareStartTime, {
     id: 'PrepareStartTime',
     header: 'Start At',
     cell: (info) => info.getValue(),
+    enableColumnFilter: false,
   }),
-  columnHelper.accessor((props) => props.TestEndTime, { id: 'TestEndTime', header: 'End At', cell: (info) => info.getValue() }),
-  columnHelper.accessor((props) => props.ToolName, { id: 'ToolName', header: 'Tool Name', cell: (info) => info.getValue() }),
+  columnHelper.accessor((props) => props.TestEndTime, {
+    id: 'TestEndTime',
+    header: 'End At',
+    cell: (info) => info.getValue(),
+    enableColumnFilter: false,
+  }),
+  columnHelper.accessor((props) => props.ToolName, {
+    id: 'ToolName',
+    header: 'Tool Name',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
   columnHelper.accessor((props) => props.TestStatusName, {
     id: 'TestStatusName',
     header: 'Test Status',
     cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
   }),
-  columnHelper.accessor((props) => props.TestResultName, { id: 'TestResultName', header: 'Test Result', cell: (info) => info.getValue() }),
+  columnHelper.accessor((props) => props.TestResultName, {
+    id: 'TestResultName',
+    header: 'Test Result',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
 ]
 
 const MPTaskView = (): JSX.Element => {
@@ -202,6 +264,14 @@ const MPTaskView = (): JSX.Element => {
     })
   }
 
+  const onFilter = (col: Column<IMPTaskTableView, unknown>, filterValues?: any[]): void => {
+    if (filterValues === undefined || filterValues.length === 0) {
+      col.setFilterValue([])
+      return
+    }
+    col.setFilterValue(filterValues)
+  }
+
   const table = useReactTable({
     data: tasks,
     columns: defaultColumns,
@@ -258,16 +328,20 @@ const MPTaskView = (): JSX.Element => {
                       </div>
                       {/* fileter */}
                       {(() => {
-                        if (!header.column.getCanFilter() || !(header.column.id === 'PjId')) {
+                        if (!header.column.getCanFilter()) {
                           return null
                         }
                         const ddData = getFilterColumnData(header.column.id)
                         return (
                           <DropdownMenuButton
-                            column={header.column}
+                            onConfirm={(values: any[]) => {
+                              onFilter(header.column, values)
+                            }}
+                            onCancel={() => {
+                              onFilter(header.column)
+                            }}
                             disabled={ddData.length === 0}
                             data={ddData}
-                            filterDebounce={100}
                           ></DropdownMenuButton>
                         )
                       })()}
@@ -304,42 +378,34 @@ const MPTaskView = (): JSX.Element => {
       </div>
       {/* Pagination */}
       <div className="flex items-center gap-2 justify-end">
-        <button
-          className="border rounded p-1"
+        <Button17
           onClick={() => {
             table.firstPage()
           }}
           disabled={!table.getCanPreviousPage()}
-        >
-          {'<<'}
-        </button>
-        <button
-          className="border rounded p-1"
+          text="<<"
+        ></Button17>
+        <Button17
           onClick={() => {
             table.previousPage()
           }}
           disabled={!table.getCanPreviousPage()}
-        >
-          {'<'}
-        </button>
-        <button
-          className="border rounded p-1"
+          text="<"
+        ></Button17>
+        <Button17
           onClick={() => {
             table.nextPage()
           }}
           disabled={!table.getCanNextPage()}
-        >
-          {'>'}
-        </button>
-        <button
-          className="border rounded p-1"
+          text=">"
+        ></Button17>
+        <Button17
           onClick={() => {
             table.lastPage()
           }}
           disabled={!table.getCanNextPage()}
-        >
-          {'>>'}
-        </button>
+          text=">>"
+        ></Button17>
         <span className="flex items-center gap-1">
           <div>Page</div>
           <strong>
@@ -398,8 +464,8 @@ const MPTaskView = (): JSX.Element => {
 interface DropdownMenuButtonProps {
   data: any[]
   disabled: boolean
-  column: Column<any, unknown>
-  filterDebounce?: number
+  onConfirm: (filterValues: any[]) => void
+  onCancel: () => void
 }
 
 interface DropdownItem {
@@ -407,35 +473,16 @@ interface DropdownItem {
   checked: boolean
 }
 
-const DropdownMenuButton = ({ data, disabled, column, filterDebounce = 500 }: DropdownMenuButtonProps): JSX.Element => {
+const DropdownMenuButton = ({ data, disabled, onConfirm, onCancel }: DropdownMenuButtonProps): JSX.Element => {
   const [isOpen, setIsOpen] = useState(false)
   const [visibleData, setVisibleData] = useState<DropdownItem[]>(data.map((item) => ({ value: item, checked: false })))
   const [isAllChecked, setIsAllChecked] = useState<boolean>(false)
   const [filterValue, setFilterValue] = useState<string>('')
 
-console.log('DropdownMenuButton, data len:', data.length)
-
-console.log('DropdownMenuButton, visibleData len:', visibleData.length)
   useEffect(() => {
-    const newVisibleData = mergeVisibleData(data)
+    const newVisibleData = mergeVisibleData(data, filterValue)
     setVisibleData(newVisibleData)
-    setIsAllChecked(newVisibleData.every((item) => item.checked))
-
-    console.log('useEffect:merge')
   }, [data])
-
-  // filter debounce
-  // useEffect(() => {
-  //   const timeout = setTimeout(() => {
-  //     column.setFilterValue(visibleData.filter((item) => item.checked).map((item) => item.value))
-  //   }, filterDebounce)
-
-  //   console.log('useEffect:filter debounce')
-
-  //   return () => {
-  //     clearTimeout(timeout)
-  //   }
-  // }, [visibleCheckList])
 
   const toggleMenu = (): void => {
     setIsOpen(!isOpen)
@@ -446,14 +493,6 @@ console.log('DropdownMenuButton, visibleData len:', visibleData.length)
     newVisibleData[idx].checked = !newVisibleData[idx].checked
     setIsAllChecked(newVisibleData.every((item) => item.checked))
     setVisibleData(newVisibleData)
-
-    // update visibleCheckList
-      // const newVisibleCheckList = newVisibleData.map((item) => item.checked)
-      // setVisibleCheckList(newVisibleCheckList)
-
-    column.setFilterValue(newVisibleData.filter((item) => item.checked).map((item) => item.value))
-
-    console.log('onCheck')
   }
 
   const onCheckAll = (): void => {
@@ -463,33 +502,35 @@ console.log('DropdownMenuButton, visibleData len:', visibleData.length)
 
     const newVisibleData = visibleData.map((item) => ({ ...item, checked: !isAllChecked }))
     setVisibleData(newVisibleData)
-
-    // update visibleCheckList
-    // const newVisibleCheckList = visibleData.map((item) => !isAllChecked)
-    // setVisibleCheckList(newVisibleCheckList)
-
-    column.setFilterValue(newVisibleData.filter((item) => item.checked).map((item) => item.value))
-
-    console.log('onCheckAll')
   }
 
   const onFilter = (v: string): void => {
+    if (filterValue === '' && v === '') return
+
     setFilterValue(v)
 
     const newVisibleData = mergeVisibleData(data, v)
     setIsAllChecked(newVisibleData.length > 0 && newVisibleData.every((item) => item.checked))
     setVisibleData(newVisibleData)
-
-    // update visibleCheckList
-    // const newVisibleCheckList = newVisibleData.map((item) => item.checked)
-    // setVisibleCheckList(newVisibleCheckList)
-
-    column.setFilterValue(newVisibleData.filter((item) => item.checked).map((item) => item.value))
-
-    console.log('onFilter')
   }
 
-  const mergeVisibleData = (data: any[], fv = filterValue): DropdownItem[] => {
+  const onConfirmAction = (): void => {
+    setIsOpen(false)
+
+    const filterValues = visibleData.filter((item) => item.checked).map((item) => item.value)
+    onConfirm(filterValues)
+  }
+
+  const onCancelAction = (): void => {
+    // clear all
+    setIsAllChecked(false)
+    setVisibleData(data.map((item) => ({ value: item, checked: false })))
+    setIsOpen(false)
+
+    onCancel()
+  }
+
+  const mergeVisibleData = (data: any[], filterValue: string): DropdownItem[] => {
     const newVisibleData = []
     const comingData = data.map((item) => ({ value: item, checked: false }))
     const fData = comingData.filter((item) => {
@@ -504,7 +545,7 @@ console.log('DropdownMenuButton, visibleData len:', visibleData.length)
 
       return (c.toLowerCase() as string).includes(filterValue.toLowerCase())
     })
-    
+
     for (let i = 0; i < fData.length; i++) {
       let found = false
       for (let j = 0; j < visibleData.length; j++) {
@@ -532,12 +573,12 @@ console.log('DropdownMenuButton, visibleData len:', visibleData.length)
         type="button`}
         onClick={toggleMenu}
       >
-        <FilterListIcon></FilterListIcon>
+        {visibleData.some((item: DropdownItem) => item.checked) ? <FilterAltIcon /> : <FilterListIcon />}
       </button>
       {isOpen && (
         <ul
           role="menu"
-          className={`${style['custom-scrollbar']} absolute z-10 top-12 max-w-[180px] min-h-[150px] max-h-[250px] overflow-auto border bg-white shadow-lg focus:outline-none`}
+          className={`${style['custom-scrollbar']} absolute z-10 top-12 min-w-[180px] min-h-[150px] max-h-[250px] overflow-auto border bg-white shadow-lg focus:outline-none`}
         >
           {/* filter input & all checkbox */}
           <div className="sticky top-0 z-9 bg-white px-2 pt-2">
@@ -556,18 +597,22 @@ console.log('DropdownMenuButton, visibleData len:', visibleData.length)
             <li
               role="menuitem"
               onClick={() => {
-                onCheckAll()
+                if (visibleData.length !== 0) onCheckAll()
               }}
-              className={`${visibleData.length === 0 ? '' : 'cursor-pointer'}  flex w-full text-sm items-center p-1 hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100`}
+              className={`${
+                visibleData.length !== 0 ? 'cursor-pointer' : ''
+              }  flex w-full text-sm items-center p-1 mt-2 hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100`}
             >
               <input
                 disabled={visibleData.length === 0}
-                className={`${visibleData.length === 0 ? '' : 'cursor-pointer'}  hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100 mr-2`}
+                className={`${
+                  visibleData.length !== 0 ? 'cursor-pointer' : ''
+                }  hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100 mr-2`}
                 type="checkbox"
                 checked={isAllChecked}
                 onChange={() => {}}
               ></input>
-              <label className={`${visibleData.length === 0 ? '' : 'cursor-pointer'}`}>All</label>
+              <label className={`${visibleData.length !== 0 ? 'cursor-pointer' : ''}`}>All</label>
             </li>
           </div>
           {/* data set .... */}
@@ -592,6 +637,24 @@ console.log('DropdownMenuButton, visibleData len:', visibleData.length)
                 </li>
               )
             })}
+          </div>
+          {/* action button */}
+          <div className="h-1 border-b-2"></div>
+          <div className="flex p-2 justify-end items-center">
+            <Button17
+              onClick={() => {
+                onConfirmAction()
+              }}
+              text="Confrim"
+              tailwindStyles="mx-1"
+            ></Button17>
+            <Button17
+              onClick={() => {
+                onCancelAction()
+              }}
+              text="Cancel"
+              tailwindStyles="mx-1"
+            ></Button17>
           </div>
         </ul>
       )}

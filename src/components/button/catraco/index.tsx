@@ -1,15 +1,7 @@
 import React from 'react'
-interface ICatracoButtonButtonProps {
-  /**
-   * The text to display inside the button
-   */
-  text: string
+import type ButtonProps from '../button-type'
 
-  // click event
-  onClick: () => void
-}
-
-const CatracoButton = (props: ICatracoButtonButtonProps): JSX.Element => {
+const CatracoButton = (props: ButtonProps): JSX.Element => {
   return (
     <button
       className="bg-gray-900 text-gray-400 border border-gray-400 border-b-4 font-medium overflow-hidden relative px-4 py-2 rounded-md hover:brightness-150 hover:border-t-4 hover:border-b active:opacity-75 outline-none duration-300 group"

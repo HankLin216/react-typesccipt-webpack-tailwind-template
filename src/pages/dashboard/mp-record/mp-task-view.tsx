@@ -50,51 +50,6 @@ const ContainInArray = (row: Row<IMPTaskTableView>, columnId: string, filterValu
   return false
 }
 
-const fakeData: IMPTaskTableView[] = [
-  {
-    PjId: 334,
-    ForcePcieFlowName: 'ForcePcieFlowName',
-    ForceBootCodeName: 'ForceBootCodeName',
-    UserRealName: 'UserRealName',
-    IP: 'IP',
-    ControllerID: 'ControllerID',
-    IC: 'IC',
-    FwVersion: 'FwVersion',
-    FwSubVersion: 'FwSubVersion',
-    MpErrorCode: 'MpErrorCode',
-    MpResultName: 'MpResultName',
-    MpEnvironmentName: 'MpEnvironmentName',
-    TkId: 123,
-    IdleStartTime: moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss'),
-    PrepareStartTime: moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss'),
-    TestEndTime: moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss'),
-    ToolName: 'ToolName',
-    TestStatusName: 'TestStatusName',
-    TestResultName: 'TestResultName',
-  },
-  {
-    PjId: 3341,
-    ForcePcieFlowName: 'ForcePcieFlowName1',
-    ForceBootCodeName: 'ForceBootCodeName1',
-    UserRealName: 'UserRealName1',
-    IP: 'IP1',
-    ControllerID: 'ControllerID1',
-    IC: 'IC1',
-    FwVersion: 'FwVersion1',
-    FwSubVersion: 'FwSubVersion1',
-    MpErrorCode: 'MpErrorCode1',
-    MpResultName: 'MpResultName1',
-    MpEnvironmentName: 'MpEnvironmentName1',
-    TkId: 1231,
-    IdleStartTime: moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss'),
-    PrepareStartTime: moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss'),
-    TestEndTime: moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss'),
-    ToolName: 'ToolName1',
-    TestStatusName: 'TestStatusName1',
-    TestResultName: 'TestResultName1',
-  },
-]
-
 const columnHelper = createColumnHelper<IMPTaskTableView>()
 const defaultColumns = [
   columnHelper.accessor((props) => props.PjId, {
@@ -213,15 +168,14 @@ const MPTaskView = (): JSX.Element => {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
 
   useEffect(() => {
-    setTasks(fakeData)
-    // const treq = { createTimeFrom: moment().subtract(0.5, 'hours'), createTimeTo: moment() }
-    // GetMPTaskView(treq)
-    //   .then((res) => {
-    //     setTasks(res)
-    //   })
-    //   .catch((e) => {
-    //     console.error(e)
-    //   })
+    const treq = { createTimeFrom: moment().subtract(0.5, 'hours'), createTimeTo: moment() }
+    GetMPTaskView(treq)
+      .then((res) => {
+        setTasks(res)
+      })
+      .catch((e) => {
+        console.error(e)
+      })
   }, [])
 
   const getColumnData = (columnId: string): any[] => {

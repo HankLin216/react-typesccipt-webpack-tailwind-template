@@ -48,6 +48,51 @@ const ContainInArray = (row: Row<IMPTaskTableView>, columnId: string, filterValu
   return false
 }
 
+const fakeData: IMPTaskTableView[] = [
+  {
+    PjId: 334,
+    ForcePcieFlowName: 'ForcePcieFlowName',
+    ForceBootCodeName: 'ForceBootCodeName',
+    UserRealName: 'UserRealName',
+    IP: 'IP',
+    ControllerID: 'ControllerID',
+    IC: 'IC',
+    FwVersion: 'FwVersion',
+    FwSubVersion: 'FwSubVersion',
+    MpErrorCode: 'MpErrorCode',
+    MpResultName: 'MpResultName',
+    MpEnvironmentName: 'MpEnvironmentName',
+    TkId: 123,
+    IdleStartTime: moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss'),
+    PrepareStartTime: moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss'),
+    TestEndTime: moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss'),
+    ToolName: 'ToolName',
+    TestStatusName: 'TestStatusName',
+    TestResultName: 'TestResultName',
+  },
+  {
+    PjId: 3341,
+    ForcePcieFlowName: 'ForcePcieFlowName1',
+    ForceBootCodeName: 'ForceBootCodeName1',
+    UserRealName: 'UserRealName1',
+    IP: 'IP1',
+    ControllerID: 'ControllerID1',
+    IC: 'IC1',
+    FwVersion: 'FwVersion1',
+    FwSubVersion: 'FwSubVersion1',
+    MpErrorCode: 'MpErrorCode1',
+    MpResultName: 'MpResultName1',
+    MpEnvironmentName: 'MpEnvironmentName1',
+    TkId: 1231,
+    IdleStartTime: moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss'),
+    PrepareStartTime: moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss'),
+    TestEndTime: moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss'),
+    ToolName: 'ToolName1',
+    TestStatusName: 'TestStatusName1',
+    TestResultName: 'TestResultName1',
+  },
+]
+
 const columnHelper = createColumnHelper<IMPTaskTableView>()
 const defaultColumns = [
   columnHelper.accessor((props) => props.PjId, {
@@ -106,14 +151,15 @@ const MPTaskView = (): JSX.Element => {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
 
   useEffect(() => {
-    const treq = { createTimeFrom: moment().subtract(0.5, 'hours'), createTimeTo: moment() }
-    GetMPTaskView(treq)
-      .then((res) => {
-        setTasks(res)
-      })
-      .catch((e) => {
-        console.error(e)
-      })
+    setTasks(fakeData)
+    // const treq = { createTimeFrom: moment().subtract(0.5, 'hours'), createTimeTo: moment() }
+    // GetMPTaskView(treq)
+    //   .then((res) => {
+    //     setTasks(res)
+    //   })
+    //   .catch((e) => {
+    //     console.error(e)
+    //   })
   }, [])
 
   const getColumnData = (columnId: string): any[] => {
@@ -143,7 +189,17 @@ const MPTaskView = (): JSX.Element => {
     }
 
     // sort
-    return distinctData.sort((a, b) => (a as string).localeCompare(b as string))
+    return distinctData.sort((a, b) => {
+      if (typeof a === 'string' && typeof b === 'string') {
+        return a.localeCompare(b)
+      }
+
+      if (typeof a === 'number' && typeof b === 'number') {
+        return a - b
+      }
+
+      return 0
+    })
   }
 
   const table = useReactTable({
@@ -202,7 +258,7 @@ const MPTaskView = (): JSX.Element => {
                       </div>
                       {/* fileter */}
                       {(() => {
-                        if (!header.column.getCanFilter()) {
+                        if (!header.column.getCanFilter() || !(header.column.id === 'PjId')) {
                           return null
                         }
                         const ddData = getFilterColumnData(header.column.id)
@@ -354,62 +410,50 @@ interface DropdownItem {
 const DropdownMenuButton = ({ data, disabled, column, filterDebounce = 500 }: DropdownMenuButtonProps): JSX.Element => {
   const [isOpen, setIsOpen] = useState(false)
   const [visibleData, setVisibleData] = useState<DropdownItem[]>(data.map((item) => ({ value: item, checked: false })))
-  const [visibleCheckList, setVisibleCheckList] = useState<boolean[]>([])
   const [isAllChecked, setIsAllChecked] = useState<boolean>(false)
-  const [fileterValue, setFilterValue] = useState<string>('')
+  const [filterValue, setFilterValue] = useState<string>('')
 
+console.log('DropdownMenuButton, data len:', data.length)
+
+console.log('DropdownMenuButton, visibleData len:', visibleData.length)
   useEffect(() => {
-    // merge
-    const newVisibleData = []
-    const comingData = data.map((item) => ({ value: item, checked: false }))
-    for (let i = 0; i < comingData.length; i++) {
-      let found = false
-      for (let j = 0; j < visibleData.length; j++) {
-        if (comingData[i].value === visibleData[j].value) {
-          found = true
-          newVisibleData.push(visibleData[j])
-          break
-        }
-      }
-      if (!found) {
-        newVisibleData.push(comingData[i])
-      }
-    }
+    const newVisibleData = mergeVisibleData(data)
     setVisibleData(newVisibleData)
+    setIsAllChecked(newVisibleData.every((item) => item.checked))
+
+    console.log('useEffect:merge')
   }, [data])
 
   // filter debounce
-  useEffect(() => {
-    console.log('trigger visibleData')
-    const timeout = setTimeout(() => {
-      column.setFilterValue(visibleData.filter((item) => item.checked).map((item) => item.value))
-    }, filterDebounce)
+  // useEffect(() => {
+  //   const timeout = setTimeout(() => {
+  //     column.setFilterValue(visibleData.filter((item) => item.checked).map((item) => item.value))
+  //   }, filterDebounce)
 
-    return () => {
-      clearTimeout(timeout)
-    }
-  }, [visibleCheckList])
+  //   console.log('useEffect:filter debounce')
+
+  //   return () => {
+  //     clearTimeout(timeout)
+  //   }
+  // }, [visibleCheckList])
 
   const toggleMenu = (): void => {
     setIsOpen(!isOpen)
   }
 
   const onCheck = (idx: number): void => {
-    let isAllChecked = false
-    setVisibleData((pre) => {
-      const newVisibleData = [...pre]
-      newVisibleData[idx].checked = !newVisibleData[idx].checked
-      isAllChecked = newVisibleData.every((item) => item.checked)
-      // if any of the checkbox is unchecked, uncheck the "All" checkbox
-      // if all of the checkbox is checked, check the "All" checkbox
-      setIsAllChecked(isAllChecked)
+    const newVisibleData = [...visibleData]
+    newVisibleData[idx].checked = !newVisibleData[idx].checked
+    setIsAllChecked(newVisibleData.every((item) => item.checked))
+    setVisibleData(newVisibleData)
 
-      // update visibleCheckList
-      const newVisibleCheckList = newVisibleData.map((item) => item.checked)
-      setVisibleCheckList(newVisibleCheckList)
+    // update visibleCheckList
+      // const newVisibleCheckList = newVisibleData.map((item) => item.checked)
+      // setVisibleCheckList(newVisibleCheckList)
 
-      return newVisibleData
-    })
+    column.setFilterValue(newVisibleData.filter((item) => item.checked).map((item) => item.value))
+
+    console.log('onCheck')
   }
 
   const onCheckAll = (): void => {
@@ -417,30 +461,64 @@ const DropdownMenuButton = ({ data, disabled, column, filterDebounce = 500 }: Dr
       return !pre
     })
 
-    if (isAllChecked) {
-      setVisibleData(visibleData.map((item) => ({ ...item, checked: false })))
-    } else {
-      setVisibleData(visibleData.map((item) => ({ ...item, checked: true })))
-    }
+    const newVisibleData = visibleData.map((item) => ({ ...item, checked: !isAllChecked }))
+    setVisibleData(newVisibleData)
 
     // update visibleCheckList
-    const newVisibleCheckList = visibleData.map((item) => !isAllChecked)
-    setVisibleCheckList(newVisibleCheckList)
+    // const newVisibleCheckList = visibleData.map((item) => !isAllChecked)
+    // setVisibleCheckList(newVisibleCheckList)
+
+    column.setFilterValue(newVisibleData.filter((item) => item.checked).map((item) => item.value))
+
+    console.log('onCheckAll')
   }
 
   const onFilter = (v: string): void => {
     setFilterValue(v)
 
-    // update visible items, every time the filter value changes, then unchecked all
-    const newVisibleData = data
-      .filter((item) => (item.toLowerCase() as string).includes(v.toLowerCase()))
-      .map((item) => ({ value: item, checked: false }))
-    setIsAllChecked(false)
+    const newVisibleData = mergeVisibleData(data, v)
+    setIsAllChecked(newVisibleData.length > 0 && newVisibleData.every((item) => item.checked))
     setVisibleData(newVisibleData)
 
     // update visibleCheckList
-    const newVisibleCheckList = newVisibleData.map((item) => item.checked)
-    setVisibleCheckList(newVisibleCheckList)
+    // const newVisibleCheckList = newVisibleData.map((item) => item.checked)
+    // setVisibleCheckList(newVisibleCheckList)
+
+    column.setFilterValue(newVisibleData.filter((item) => item.checked).map((item) => item.value))
+
+    console.log('onFilter')
+  }
+
+  const mergeVisibleData = (data: any[], fv = filterValue): DropdownItem[] => {
+    const newVisibleData = []
+    const comingData = data.map((item) => ({ value: item, checked: false }))
+    const fData = comingData.filter((item) => {
+      if (item.value === null || item.value === undefined) {
+        return false
+      }
+
+      let c = item.value
+      if (typeof item.value === 'number') {
+        c = item.value.toString()
+      }
+
+      return (c.toLowerCase() as string).includes(filterValue.toLowerCase())
+    })
+    
+    for (let i = 0; i < fData.length; i++) {
+      let found = false
+      for (let j = 0; j < visibleData.length; j++) {
+        if (fData[i].value === visibleData[j].value) {
+          found = true
+          newVisibleData.push(visibleData[j])
+          break
+        }
+      }
+      if (!found) {
+        newVisibleData.push(fData[i])
+      }
+    }
+    return newVisibleData
   }
 
   return (
@@ -464,7 +542,7 @@ const DropdownMenuButton = ({ data, disabled, column, filterDebounce = 500 }: Dr
           {/* filter input & all checkbox */}
           <div className="sticky top-0 z-9 bg-white px-2 pt-2">
             <DebouncedInput
-              value={fileterValue}
+              value={filterValue}
               className="mb-1 w-full"
               onChange={(v) => {
                 onFilter(v)
@@ -480,15 +558,16 @@ const DropdownMenuButton = ({ data, disabled, column, filterDebounce = 500 }: Dr
               onClick={() => {
                 onCheckAll()
               }}
-              className="cursor-pointer flex w-full text-sm items-center p-1 hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100 "
+              className={`${visibleData.length === 0 ? '' : 'cursor-pointer'}  flex w-full text-sm items-center p-1 hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100`}
             >
               <input
-                className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100 mr-2"
+                disabled={visibleData.length === 0}
+                className={`${visibleData.length === 0 ? '' : 'cursor-pointer'}  hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100 mr-2`}
                 type="checkbox"
                 checked={isAllChecked}
                 onChange={() => {}}
               ></input>
-              <label className="cursor-pointer">All</label>
+              <label className={`${visibleData.length === 0 ? '' : 'cursor-pointer'}`}>All</label>
             </li>
           </div>
           {/* data set .... */}

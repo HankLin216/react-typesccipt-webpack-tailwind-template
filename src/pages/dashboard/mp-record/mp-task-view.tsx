@@ -9,15 +9,14 @@ import {
   getFilteredRowModel,
 } from '@tanstack/react-table'
 import { GetMPTaskView } from '../../../biz/mp-record'
-import DebouncedInput from '../../../components/input/debounce-input'
 import moment from 'moment'
 import Button17 from '../../../components/button/button-17'
+import DropdownMenu from './mp-task-view-dropdown-menu'
 // types
+import type { HTMLProps } from 'react'
 import type { IMPTaskTableView } from '../../../biz/mp-record'
-import type { Column, RowData, SortingState, PaginationState, ColumnFiltersState, Row } from '@tanstack/react-table'
+import type { Column, RowData, SortingState, PaginationState, ColumnFiltersState, Row, Table } from '@tanstack/react-table'
 // icons
-import FilterListIcon from '@mui/icons-material/FilterList'
-import FilterAltIcon from '@mui/icons-material/FilterAlt'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp'
 // css
@@ -52,6 +51,28 @@ const ContainInArray = (row: Row<IMPTaskTableView>, columnId: string, filterValu
 
 const columnHelper = createColumnHelper<IMPTaskTableView>()
 const defaultColumns = [
+  {
+    id: 'select',
+    header: ({ table }: { table: Table<IMPTaskTableView> }) => (
+      <IndeterminateCheckbox
+        {...{
+          checked: table.getIsAllRowsSelected(),
+          indeterminate: table.getIsSomeRowsSelected(),
+          onChange: table.getToggleAllRowsSelectedHandler(),
+        }}
+      />
+    ),
+    cell: ({ row }: { row: Row<IMPTaskTableView> }) => (
+      <IndeterminateCheckbox
+        {...{
+          checked: row.getIsSelected(),
+          disabled: !row.getCanSelect(),
+          indeterminate: row.getIsSomeSelected(),
+          onChange: row.getToggleSelectedHandler(),
+        }}
+      />
+    ),
+  },
   columnHelper.accessor((props) => props.PjId, {
     id: 'PjId',
     header: () => 'Project ID',
@@ -164,8 +185,9 @@ const defaultColumns = [
 const MPTaskView = (): JSX.Element => {
   const [tasks, setTasks] = useState<IMPTaskTableView[]>([])
   const [sorting, setSorting] = useState<SortingState>([])
-  const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [rowSelection, setRowSelection] = useState({})
 
   useEffect(() => {
     const treq = { createTimeFrom: moment().subtract(3, 'days'), createTimeTo: moment() }
@@ -236,6 +258,7 @@ const MPTaskView = (): JSX.Element => {
     onSortingChange: setSorting, // optionally control sorting state in your own scope for easy access
     onPaginationChange: setPagination,
     onColumnFiltersChange: setColumnFilters,
+    onRowSelectionChange: setRowSelection,
     // sortingFns: {
     //   sortStatusFn, //or provide our custom sorting function globally for all columns to be able to use
     // },
@@ -243,6 +266,7 @@ const MPTaskView = (): JSX.Element => {
       pagination,
       sorting,
       columnFilters,
+      rowSelection,
     },
     // autoResetPageIndex: false, // turn off page index reset when sorting or filtering - default on/true
     // enableMultiSort: false, // Don't allow shift key to sort multiple columns - default on/true
@@ -255,7 +279,7 @@ const MPTaskView = (): JSX.Element => {
   return (
     <div className="flex flex-col justify-center w-11/12">
       <div className={`${style['custom-scrollbar']} overflow-auto h-[560px]`}>
-        <table>
+        <table className={`h-full`}>
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -287,7 +311,7 @@ const MPTaskView = (): JSX.Element => {
                         }
                         const ddData = getFilterColumnData(header.column.id)
                         return (
-                          <DropdownMenuButton
+                          <DropdownMenu
                             onConfirm={(values: any[]) => {
                               onFilter(header.column, values)
                             }}
@@ -296,7 +320,7 @@ const MPTaskView = (): JSX.Element => {
                             }}
                             disabled={ddData.length === 0}
                             data={ddData}
-                          ></DropdownMenuButton>
+                          ></DropdownMenu>
                         )
                       })()}
                       {/* sorting icons */}
@@ -328,6 +352,22 @@ const MPTaskView = (): JSX.Element => {
               </tr>
             ))}
           </tbody>
+          <tfoot>
+            <tr className="sticky bottom-0 bg-white">
+              <td className="border-t border-b border-gray-300 px-4 text-left">
+                <IndeterminateCheckbox
+                  {...{
+                    checked: table.getIsAllPageRowsSelected(),
+                    indeterminate: table.getIsSomePageRowsSelected(),
+                    onChange: table.getToggleAllPageRowsSelectedHandler(),
+                  }}
+                />
+              </td>
+              <td className="border-t border-b border-gray-300 px-4 text-left" colSpan={table.getAllColumns().length - 1}>
+                Select Page Rows ({table.getRowModel().rows.length})
+              </td>
+            </tr>
+          </tfoot>
         </table>
       </div>
       {/* Pagination */}
@@ -409,211 +449,29 @@ const MPTaskView = (): JSX.Element => {
             )
           })()}
         </span>
+      </div>
+      <div className="flex items-center gap-2 justify-end">
+        <span>{Object.keys(rowSelection).length} Rows Selected</span>
         <span>| total records: {table.getRowCount()}</span>
       </div>
     </div>
   )
 }
 
-interface DropdownMenuButtonProps {
-  data: any[]
-  disabled: boolean
-  onConfirm: (filterValues: any[]) => void
-  onCancel: () => void
-}
-
-interface DropdownItem {
-  value: string
-  checked: boolean
-}
-
-const DropdownMenuButton = ({ data, disabled, onConfirm, onCancel }: DropdownMenuButtonProps): JSX.Element => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [visibleData, setVisibleData] = useState<DropdownItem[]>(data.map((item) => ({ value: item, checked: false })))
-  const [isAllChecked, setIsAllChecked] = useState<boolean>(false)
-  const [filterValue, setFilterValue] = useState<string>('')
+const IndeterminateCheckbox = ({
+  indeterminate,
+  className = '',
+  ...rest
+}: { indeterminate?: boolean } & HTMLProps<HTMLInputElement>): JSX.Element => {
+  const ref = React.useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    const newVisibleData = mergeVisibleData(data, filterValue)
-    setVisibleData(newVisibleData)
-  }, [data])
-
-  const toggleMenu = (): void => {
-    setIsOpen(!isOpen)
-  }
-
-  const onCheck = (idx: number): void => {
-    const newVisibleData = [...visibleData]
-    newVisibleData[idx].checked = !newVisibleData[idx].checked
-    setIsAllChecked(newVisibleData.every((item) => item.checked))
-    setVisibleData(newVisibleData)
-  }
-
-  const onCheckAll = (): void => {
-    setIsAllChecked((pre) => {
-      return !pre
-    })
-
-    const newVisibleData = visibleData.map((item) => ({ ...item, checked: !isAllChecked }))
-    setVisibleData(newVisibleData)
-  }
-
-  const onFilter = (v: string): void => {
-    if (filterValue === '' && v === '') return
-
-    setFilterValue(v)
-
-    const newVisibleData = mergeVisibleData(data, v)
-    setIsAllChecked(newVisibleData.length > 0 && newVisibleData.every((item) => item.checked))
-    setVisibleData(newVisibleData)
-  }
-
-  const onConfirmAction = (): void => {
-    setIsOpen(false)
-
-    const filterValues = visibleData.filter((item) => item.checked).map((item) => item.value)
-    onConfirm(filterValues)
-  }
-
-  const onCancelAction = (): void => {
-    // clear all
-    setIsAllChecked(false)
-    setVisibleData(data.map((item) => ({ value: item, checked: false })))
-    setIsOpen(false)
-
-    onCancel()
-  }
-
-  const mergeVisibleData = (data: any[], filterValue: string): DropdownItem[] => {
-    const newVisibleData = []
-    const comingData = data.map((item) => ({ value: item, checked: false }))
-    const fData = comingData.filter((item) => {
-      if (item.value === null || item.value === undefined) {
-        return false
-      }
-
-      let c = item.value
-      if (typeof item.value === 'number') {
-        c = item.value.toString()
-      }
-
-      return (c.toLowerCase() as string).includes(filterValue.toLowerCase())
-    })
-
-    for (let i = 0; i < fData.length; i++) {
-      let found = false
-      for (let j = 0; j < visibleData.length; j++) {
-        if (fData[i].value === visibleData[j].value) {
-          found = true
-          newVisibleData.push(visibleData[j])
-          break
-        }
-      }
-      if (!found) {
-        newVisibleData.push(fData[i])
-      }
+    if (ref.current !== null && rest.checked !== undefined && typeof indeterminate === 'boolean') {
+      ref.current.indeterminate = !rest.checked && indeterminate
     }
-    return newVisibleData
-  }
+  }, [ref, indeterminate])
 
-  return (
-    <>
-      <button
-        disabled={disabled}
-        className={`p-2.5 text-center 
-        text-sm transition-all
-        ${isOpen ? 'text-gray-800' : 'text-gray-400'}
-        ${!disabled ? 'hover:text-gray-800' : ''}
-        type="button`}
-        onClick={toggleMenu}
-      >
-        {visibleData.some((item: DropdownItem) => item.checked) ? <FilterAltIcon /> : <FilterListIcon />}
-      </button>
-      {isOpen && (
-        <ul
-          role="menu"
-          className={`${style['custom-scrollbar']} absolute z-10 top-12 min-w-[180px] min-h-[150px] max-h-[250px] overflow-auto border bg-white shadow-lg focus:outline-none`}
-        >
-          {/* filter input & all checkbox */}
-          <div className="sticky top-0 z-9 bg-white px-2 pt-2">
-            <DebouncedInput
-              value={filterValue}
-              className="mb-1 w-full"
-              onChange={(v) => {
-                onFilter(v)
-              }}
-              debounce={500}
-              placeholder="filter..."
-              type="text"
-            ></DebouncedInput>
-            <div className="h-1 border-b-2"></div>
-            {/* all */}
-            <li
-              role="menuitem"
-              onClick={() => {
-                if (visibleData.length !== 0) onCheckAll()
-              }}
-              className={`${
-                visibleData.length !== 0 ? 'cursor-pointer' : ''
-              }  flex w-full text-sm items-center p-1 mt-2 hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100`}
-            >
-              <input
-                disabled={visibleData.length === 0}
-                className={`${
-                  visibleData.length !== 0 ? 'cursor-pointer' : ''
-                }  hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100 mr-2`}
-                type="checkbox"
-                checked={isAllChecked}
-                onChange={() => {}}
-              ></input>
-              <label className={`${visibleData.length !== 0 ? 'cursor-pointer' : ''}`}>All</label>
-            </li>
-          </div>
-          {/* data set .... */}
-          <div className="px-2 pb-2">
-            {visibleData.map((item, idx) => {
-              return (
-                <li
-                  key={item.value}
-                  role="menuitem"
-                  className="cursor-pointer flex w-full text-sm items-center p-1 hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100 "
-                  onClick={(_) => {
-                    onCheck(idx)
-                  }}
-                >
-                  <input
-                    className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100 mr-2"
-                    type="checkbox"
-                    checked={item.checked ?? false}
-                    onChange={(_) => {}}
-                  ></input>
-                  <label className="cursor-pointer">{item.value}</label>
-                </li>
-              )
-            })}
-          </div>
-          {/* action button */}
-          <div className="h-1 border-b-2"></div>
-          <div className="flex p-2 justify-end items-center">
-            <Button17
-              onClick={() => {
-                onConfirmAction()
-              }}
-              text="Confrim"
-              tailwindStyles="mx-1"
-            ></Button17>
-            <Button17
-              onClick={() => {
-                onCancelAction()
-              }}
-              text="Cancel"
-              tailwindStyles="mx-1"
-            ></Button17>
-          </div>
-        </ul>
-      )}
-    </>
-  )
+  return <input type="checkbox" ref={ref} className={className + ' cursor-pointer'} {...rest} />
 }
 
 export default MPTaskView

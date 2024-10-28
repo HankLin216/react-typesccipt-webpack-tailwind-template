@@ -1,7 +1,9 @@
-interface ButtonProps {
+import type { HTMLProps } from 'react'
+
+interface ButtonProps extends HTMLProps<HTMLInputElement> {
   text: string
   onClick: () => void
-  tailwindStyles?: string
+  className?: string
   disabled?: boolean
 }
 

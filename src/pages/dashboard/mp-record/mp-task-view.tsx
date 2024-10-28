@@ -21,7 +21,7 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp'
 // css
-import style from './custom-scrollbar.module.css'
+import style from '../../../components/scollbar/styles.module.css'
 declare module '@tanstack/react-table' {
   // allows us to define custom properties for our columns
   // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
@@ -168,7 +168,7 @@ const MPTaskView = (): JSX.Element => {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
 
   useEffect(() => {
-    const treq = { createTimeFrom: moment().subtract(0.5, 'hours'), createTimeTo: moment() }
+    const treq = { createTimeFrom: moment().subtract(3, 'days'), createTimeTo: moment() }
     GetMPTaskView(treq)
       .then((res) => {
         setTasks(res)

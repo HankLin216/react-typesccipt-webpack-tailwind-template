@@ -12,6 +12,8 @@ import { GetMPTaskView } from '../../../biz/mp-record'
 import moment from 'moment'
 import Button17 from '../../../components/button/button-17'
 import DropdownMenu from './mp-task-view-dropdown-menu'
+import Continuous from '../../../components/loading/continuous'
+import ToolBar from './mp-task-view-toolbar'
 // types
 import type { HTMLProps } from 'react'
 import type { IMPTaskTableView } from '../../../biz/mp-record'
@@ -49,6 +51,12 @@ const ContainInArray = (row: Row<IMPTaskTableView>, columnId: string, filterValu
   return false
 }
 
+const beautifyDate = (date: string): string => {
+  return moment(date).format('YYYY-MM-DD HH:mm:ss')
+}
+
+const oneDayBefore = moment().add(-1, 'days').startOf('day').clone().hours(0).minutes(0).seconds(0).milliseconds(0)
+
 const columnHelper = createColumnHelper<IMPTaskTableView>()
 const defaultColumns = [
   {
@@ -82,32 +90,27 @@ const defaultColumns = [
     },
     filterFn: ContainInArray,
   }),
-  columnHelper.accessor((props) => props.ForcePcieFlowName, {
-    id: 'ForcePcieFlowName',
-    header: 'Force PCIe Flow',
+  columnHelper.accessor((props) => props.TkId, {
+    id: 'TkId',
+    header: 'Task ID',
     cell: (info) => info.getValue(),
     filterFn: ContainInArray,
   }),
-  columnHelper.accessor((props) => props.ForceBootCodeName, {
-    id: 'ForceBootCodeName',
-    header: 'Force Boot Code',
-    cell: (info) => info.getValue(),
-    filterFn: ContainInArray,
-  }),
-  columnHelper.accessor((props) => props.UserRealName, {
-    id: 'UserRealName',
-    header: 'User Name',
-    cell: (info) => info.getValue(),
-    filterFn: ContainInArray,
-  }),
+
   columnHelper.accessor((props) => props.IP, { id: 'Ip', header: 'IP', cell: (info) => info.getValue(), filterFn: ContainInArray }),
+  columnHelper.accessor((props) => props.ToolName, {
+    id: 'ToolName',
+    header: 'Tool Name',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
+  columnHelper.accessor((props) => props.IC, { id: 'Ic', header: 'IC', cell: (info) => info.getValue(), filterFn: ContainInArray }),
   columnHelper.accessor((props) => props.ControllerID, {
     id: 'ControllerID',
     header: 'Controller ID',
     cell: (info) => info.getValue(),
     filterFn: ContainInArray,
   }),
-  columnHelper.accessor((props) => props.IC, { id: 'Ic', header: 'IC', cell: (info) => info.getValue(), filterFn: ContainInArray }),
   columnHelper.accessor((props) => props.FwVersion, {
     id: 'FwVersion',
     header: 'Fw Version',
@@ -117,6 +120,18 @@ const defaultColumns = [
   columnHelper.accessor((props) => props.FwSubVersion, {
     id: 'FwSubVersion',
     header: 'Fw Subversion',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
+  columnHelper.accessor((props) => props.TestStatusName, {
+    id: 'TestStatusName',
+    header: 'Test Status',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
+  columnHelper.accessor((props) => props.TestResultName, {
+    id: 'TestResultName',
+    header: 'Test Result',
     cell: (info) => info.getValue(),
     filterFn: ContainInArray,
   }),
@@ -138,47 +153,41 @@ const defaultColumns = [
     cell: (info) => info.getValue(),
     filterFn: ContainInArray,
   }),
-  columnHelper.accessor((props) => props.TkId, {
-    id: 'TkId',
-    header: 'Task ID',
+  columnHelper.accessor((props) => props.ForcePcieFlowName, {
+    id: 'ForcePcieFlowName',
+    header: 'Force PCIe Flow',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
+  columnHelper.accessor((props) => props.ForceBootCodeName, {
+    id: 'ForceBootCodeName',
+    header: 'Force Boot Code',
+    cell: (info) => info.getValue(),
+    filterFn: ContainInArray,
+  }),
+  columnHelper.accessor((props) => props.UserRealName, {
+    id: 'UserRealName',
+    header: 'User Name',
     cell: (info) => info.getValue(),
     filterFn: ContainInArray,
   }),
   columnHelper.accessor((props) => props.IdleStartTime, {
     id: 'IdleStartTime',
     header: 'Build At',
-    cell: (info) => info.getValue(),
+    cell: (info) => <span className="text-nowrap">{beautifyDate(info.getValue())}</span>,
     enableColumnFilter: false,
   }),
   columnHelper.accessor((props) => props.PrepareStartTime, {
     id: 'PrepareStartTime',
     header: 'Start At',
-    cell: (info) => info.getValue(),
+    cell: (info) => <span className="text-nowrap">{beautifyDate(info.getValue())}</span>,
     enableColumnFilter: false,
   }),
   columnHelper.accessor((props) => props.TestEndTime, {
     id: 'TestEndTime',
     header: 'End At',
-    cell: (info) => info.getValue(),
+    cell: (info) => <span className="text-nowrap">{beautifyDate(info.getValue())}</span>,
     enableColumnFilter: false,
-  }),
-  columnHelper.accessor((props) => props.ToolName, {
-    id: 'ToolName',
-    header: 'Tool Name',
-    cell: (info) => info.getValue(),
-    filterFn: ContainInArray,
-  }),
-  columnHelper.accessor((props) => props.TestStatusName, {
-    id: 'TestStatusName',
-    header: 'Test Status',
-    cell: (info) => info.getValue(),
-    filterFn: ContainInArray,
-  }),
-  columnHelper.accessor((props) => props.TestResultName, {
-    id: 'TestResultName',
-    header: 'Test Result',
-    cell: (info) => info.getValue(),
-    filterFn: ContainInArray,
   }),
 ]
 
@@ -188,9 +197,11 @@ const MPTaskView = (): JSX.Element => {
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = useState({})
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const treq = { createTimeFrom: moment().subtract(3, 'days'), createTimeTo: moment() }
+    // default one day before
+    const treq = { createTimeFrom: oneDayBefore, createTimeTo: moment() }
     GetMPTaskView(treq)
       .then((res) => {
         setTasks(res)
@@ -198,7 +209,25 @@ const MPTaskView = (): JSX.Element => {
       .catch((e) => {
         console.error(e)
       })
+      .finally(() => {
+        setLoading(false)
+      })
   }, [])
+
+  const onDateButtonClick = (start: moment.Moment, end: moment.Moment): void => {
+    setLoading(true)
+    const treq = { createTimeFrom: start, createTimeTo: end }
+    GetMPTaskView(treq)
+      .then((res) => {
+        setTasks(res)
+      })
+      .catch((e) => {
+        console.error(e)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }
 
   const getColumnData = (columnId: string): any[] => {
     const column = table.getColumn(columnId)
@@ -277,16 +306,33 @@ const MPTaskView = (): JSX.Element => {
   })
 
   return (
-    <div className="flex flex-col justify-center w-11/12">
+    <div className="flex flex-col justify-center w-[95%] bg-white shadow p-2">
+      {/* tool bar */}
+      <ToolBar
+        StartDate={oneDayBefore}
+        EndDate={moment()}
+        onDateButtonClick={(s, e) => {
+          onDateButtonClick(s, e)
+        }}
+      ></ToolBar>
+      {/* loading gif */}
+      {loading ? (
+        <div className="relative">
+          <div className="absolute top-[54px] flex justify-center items-center opacity-90 bg-gray-50  h-[485px] w-full z-20">
+            <Continuous></Continuous>
+          </div>
+        </div>
+      ) : null}
+      {/* table */}
       <div className={`${style['custom-scrollbar']} overflow-auto h-[560px]`}>
-        <table className={`h-full`}>
+        <table>
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="sticky z-10 top-0 text-base leading-10 font-bold bg-white px-4 text-center whitespace-nowrap"
+                    className="sticky z-10 top-0 text-base leading-10 font-bold bg-white px-2 text-center whitespace-nowrap border-b border-black"
                   >
                     <div className="inline-flex items-center">
                       <div
@@ -345,7 +391,7 @@ const MPTaskView = (): JSX.Element => {
             {table.getRowModel().rows.map((row) => (
               <tr key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="border-t border-b border-gray-300 px-4 text-left">
+                  <td key={cell.id} className="border-t border-b border-gray-300 px-2 text-left">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -353,8 +399,8 @@ const MPTaskView = (): JSX.Element => {
             ))}
           </tbody>
           <tfoot>
-            <tr className="sticky bottom-0 bg-white">
-              <td className="border-t border-b border-gray-300 px-4 text-left">
+            <tr>
+              <td className="sticky z-10 bottom-0 text-base leading-10 font-bold bg-white px-2 text-left whitespace-nowrap">
                 <IndeterminateCheckbox
                   {...{
                     checked: table.getIsAllPageRowsSelected(),
@@ -363,7 +409,10 @@ const MPTaskView = (): JSX.Element => {
                   }}
                 />
               </td>
-              <td className="border-t border-b border-gray-300 px-4 text-left" colSpan={table.getAllColumns().length - 1}>
+              <td
+                className="sticky z-10 bottom-0 text-base leading-10 font-bold bg-white px-2 text-left whitespace-nowrap"
+                colSpan={table.getAllColumns().length - 1}
+              >
                 Select Page Rows ({table.getRowModel().rows.length})
               </td>
             </tr>

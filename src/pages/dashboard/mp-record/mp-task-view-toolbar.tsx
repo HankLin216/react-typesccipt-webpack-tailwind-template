@@ -22,7 +22,7 @@ const ToolBar = (props: ToolBarProps): JSX.Element => {
         <div className="grid grid-cols-12 gap-2">
           <div className="col-span-5">
             <DateTimePicker
-              label="Start At"
+              label="Create From"
               slotProps={{ textField: { size: 'small' } }}
               value={startDateTime}
               onChange={(newDateTime) => {
@@ -32,7 +32,7 @@ const ToolBar = (props: ToolBarProps): JSX.Element => {
           </div>
           <div className="col-span-5">
             <DateTimePicker
-              label="End At"
+              label="Create To"
               slotProps={{ textField: { size: 'small' } }}
               value={endDateTime}
               onChange={(newDateTime) => {

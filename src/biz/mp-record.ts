@@ -23,6 +23,42 @@ interface IMPTaskTableView {
   TestResultName: string
 }
 
+const RenameToolName = (toolName: string): string => {
+  let ret = toolName
+  if (toolName === 'NO_TEST_TOOL') {
+    ret = '遠端開卡'
+  } else if (toolName === 'MP') {
+    ret = '測試前開卡'
+  } else if (toolName === 'POST_MP') {
+    ret = '測試後開卡'
+  }
+  return ret
+}
+
+const RenameForcePCIeFlowName = (forcePcieFlowName: string): string => {
+  let ret = forcePcieFlowName
+  if (forcePcieFlowName === 'AutoDetect') {
+    ret = '自動'
+  } else if (forcePcieFlowName === 'NoTester') {
+    ret = '不斷電'
+  } else if (forcePcieFlowName === 'OnePort') {
+    ret = '斷電'
+  }
+  return ret
+}
+
+const RenameForceBootCodeName = (forceBootCodeName: string): string => {
+  let ret = forceBootCodeName
+  if (forceBootCodeName === 'AutoDetect') {
+    ret = '自動'
+  } else if (forceBootCodeName === 'Enable') {
+    ret = '使用'
+  } else if (forceBootCodeName === 'Disable') {
+    ret = '不使用'
+  }
+  return ret
+}
+
 async function GetMPTaskView(req: IMPTaskViewRequest): Promise<IMPTaskTableView[]> {
   const ret: IMPTaskTableView[] = []
   const resp = await dGetMPTaskView(req)
@@ -38,8 +74,8 @@ async function GetMPTaskView(req: IMPTaskViewRequest): Promise<IMPTaskTableView[
 
     const view: IMPTaskTableView = {
       PjId: task.mpProject.pjId,
-      ForcePcieFlowName: task.mpProject.forcePcieFlowName,
-      ForceBootCodeName: task.mpProject.forceBootCodeName,
+      ForcePcieFlowName: RenameForcePCIeFlowName(task.mpProject.forcePcieFlowName),
+      ForceBootCodeName: RenameForceBootCodeName(task.mpProject.forceBootCodeName),
       UserRealName: task.mpLog.userRealName,
       IP: ip,
       ControllerID: ctrlId,
@@ -53,7 +89,7 @@ async function GetMPTaskView(req: IMPTaskViewRequest): Promise<IMPTaskTableView[
       IdleStartTime: task.mpTask.idleStartTime,
       PrepareStartTime: task.mpTask.prepareStartTime,
       TestEndTime: task.mpTask.testEndTime,
-      ToolName: task.mpTask.toolName,
+      ToolName: RenameToolName(task.mpTask.toolName),
       TestStatusName: task.mpTask.testStatusName,
       TestResultName: task.mpTask.testResultName,
     }

@@ -55,6 +55,24 @@ const beautifyDate = (date: string): string => {
   return moment(date).format('YYYY-MM-DD HH:mm:ss')
 }
 
+const beautifyResult = (result: string): JSX.Element => {
+  let className = 'text-gray-400-400'
+  if (result === 'Pass') {
+    className = 'text-green-400'
+  } else if (result === 'Fail') {
+    className = 'text-red-400'
+  } else {
+    className = 'text-yellow-400'
+  }
+  return <span className={`${className}`}>{result}</span>
+}
+
+const formatFwVersion = (fwVersion: string, fwSubVersion: string): string => {
+  if (fwSubVersion === '') {
+    return fwVersion
+  }
+  return `${fwVersion}-${fwSubVersion}`
+}
 const oneDayBefore = moment().add(-1, 'days').startOf('day').clone().hours(0).minutes(0).seconds(0).milliseconds(0)
 
 const columnHelper = createColumnHelper<IMPTaskTableView>()
@@ -100,7 +118,7 @@ const defaultColumns = [
   columnHelper.accessor((props) => props.IP, { id: 'Ip', header: 'IP', cell: (info) => info.getValue(), filterFn: ContainInArray }),
   columnHelper.accessor((props) => props.ToolName, {
     id: 'ToolName',
-    header: 'Tool Name',
+    header: 'Category',
     cell: (info) => info.getValue(),
     filterFn: ContainInArray,
   }),
@@ -114,13 +132,7 @@ const defaultColumns = [
   columnHelper.accessor((props) => props.FwVersion, {
     id: 'FwVersion',
     header: 'Fw Version',
-    cell: (info) => info.getValue(),
-    filterFn: ContainInArray,
-  }),
-  columnHelper.accessor((props) => props.FwSubVersion, {
-    id: 'FwSubVersion',
-    header: 'Fw Subversion',
-    cell: (info) => info.getValue(),
+    cell: ({ row }) => formatFwVersion(row.original.FwVersion, row.original.FwSubVersion),
     filterFn: ContainInArray,
   }),
   columnHelper.accessor((props) => props.TestStatusName, {
@@ -132,18 +144,12 @@ const defaultColumns = [
   columnHelper.accessor((props) => props.TestResultName, {
     id: 'TestResultName',
     header: 'Test Result',
-    cell: (info) => info.getValue(),
+    cell: (info) => beautifyResult(info.getValue()),
     filterFn: ContainInArray,
   }),
   columnHelper.accessor((props) => props.MpErrorCode, {
     id: 'MpErrorCode',
     header: 'Error Code',
-    cell: (info) => info.getValue(),
-    filterFn: ContainInArray,
-  }),
-  columnHelper.accessor((props) => props.MpResultName, {
-    id: 'MpResultName',
-    header: 'MP Result',
     cell: (info) => info.getValue(),
     filterFn: ContainInArray,
   }),
@@ -155,7 +161,7 @@ const defaultColumns = [
   }),
   columnHelper.accessor((props) => props.ForcePcieFlowName, {
     id: 'ForcePcieFlowName',
-    header: 'Force PCIe Flow',
+    header: '開卡方式',
     cell: (info) => info.getValue(),
     filterFn: ContainInArray,
   }),
@@ -167,13 +173,13 @@ const defaultColumns = [
   }),
   columnHelper.accessor((props) => props.UserRealName, {
     id: 'UserRealName',
-    header: 'User Name',
+    header: 'User',
     cell: (info) => info.getValue(),
     filterFn: ContainInArray,
   }),
   columnHelper.accessor((props) => props.IdleStartTime, {
     id: 'IdleStartTime',
-    header: 'Build At',
+    header: 'Create At',
     cell: (info) => <span className="text-nowrap">{beautifyDate(info.getValue())}</span>,
     enableColumnFilter: false,
   }),
@@ -251,7 +257,7 @@ const MPTaskView = (): JSX.Element => {
       }
 
       if (distinctData[i] === '') {
-        distinctData[i] = 'empty'
+        distinctData[i] = '(empty)'
       }
     }
 
@@ -325,7 +331,7 @@ const MPTaskView = (): JSX.Element => {
       ) : null}
       {/* table */}
       <div className={`${style['custom-scrollbar']} overflow-auto h-[560px]`}>
-        <table>
+        <table className="border-separate border-spacing-0">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -389,7 +395,13 @@ const MPTaskView = (): JSX.Element => {
           </thead>
           <tbody>
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
+              <tr
+                key={row.id}
+                className={`${row.getIsSelected() ? 'bg-indigo-50' : ''}`}
+                onClick={(e) => {
+                  row.getToggleSelectedHandler()(e)
+                }}
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="border-t border-b border-gray-300 px-2 text-left">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

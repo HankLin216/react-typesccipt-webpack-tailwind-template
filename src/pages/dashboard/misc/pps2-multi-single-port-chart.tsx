@@ -67,7 +67,7 @@ const getRawPPS2MultiSinglePortLogs = async (req: IPPS2MultiSinglePortLogRequest
 
 const asyncFetchData = async (range: ITimeRange): Promise<IPieChartData> => {
   // split time range into parts that each part is n days
-  const timeRanges: ITimeRange[] = splitTimeRange(range, 3)
+  const timeRanges: ITimeRange[] = splitTimeRange(range, 3, 'days')
 
   const ret: IPieChartData = {
     envCount: [],

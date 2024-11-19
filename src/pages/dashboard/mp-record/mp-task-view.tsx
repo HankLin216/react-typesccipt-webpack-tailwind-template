@@ -123,8 +123,7 @@ const getFilterColumnData = (column: Column<IMPTaskTableView, unknown>): any[] =
   })
 }
 
-// const oneDayBefore = moment().add(-1, 'days').startOf('day').clone().hours(0).minutes(0).seconds(0).milliseconds(0)
-const oneDayBefore = moment().add(-180, 'minutes').clone()
+const oneDayBefore = moment().add(-1, 'days').startOf('day').clone().hours(0).minutes(0).seconds(0).milliseconds(0)
 const columnHelper = createColumnHelper<IMPTaskTableView>()
 const defaultColumns = [
   {

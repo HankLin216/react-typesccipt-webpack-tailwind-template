@@ -272,7 +272,7 @@ const getAmountOfSwitchToolChartOptions = (data: ISwitchToolAmountChartData): Hi
 
 // async function
 async function getRawSwtichToolLogs(req: ISwtichToolLogRequest): Promise<ISwtichToolLogResponse> {
-  const res = await fetch(`${process.env.TIC_BASE_URL}/switch_tool_log_detail`, {
+  const res = await fetch(`${process.env.TIC_BASE_URL}/v1/switch_tool_log_detail`, {
     method: 'POST',
     body: JSON.stringify(req),
   })
@@ -285,7 +285,7 @@ async function getRawSwtichToolLogs(req: ISwtichToolLogRequest): Promise<ISwtich
 }
 
 async function getRawListProjectProgress(req: IListProjectProgressRequest): Promise<IListProjectProgressResponse> {
-  const res = await fetch(`${process.env.TIC_BASE_URL}/project/progress`, {
+  const res = await fetch(`${process.env.TIC_BASE_URL}/v1/project/progress`, {
     method: 'POST',
     body: JSON.stringify(req),
   })

@@ -113,6 +113,7 @@ module.exports = {
         '3xl': '14px 17px 40px 4px',
         inset: 'inset 0px 18px 22px',
         darkinset: '0px 4px 4px inset',
+        pinningTableShadow: '-15px 0 15px -15px',
       },
       borderRadius: {
         primary: '20px',
@@ -138,6 +139,7 @@ module.exports = {
       '4xl-max': { max: '1850px' },
     },
     colors: () => ({
+      inherit: 'inherit',
       white: '#ffffff',
       black: '#000000',
       lightPrimary: '#F4F7FE',

@@ -4,7 +4,12 @@ import type ButtonProps from '../button-type'
 
 const Button17 = ({ className = '', ...props }: ButtonProps): JSX.Element => {
   return (
-    <button className={`${styles['button-17']} ${className}`} onClick={props.onClick} disabled={props.disabled ?? false}>
+    <button
+      className={`${styles['button-17']} ${className}`}
+      onClick={props.onClick}
+      disabled={props.disabled ?? false}
+      title={props.tooltip ?? ''}
+    >
       {props.text}
     </button>
   )

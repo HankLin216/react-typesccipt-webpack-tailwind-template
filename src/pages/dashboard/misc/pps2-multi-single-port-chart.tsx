@@ -48,7 +48,7 @@ const colorByIc: Record<string, string | Highcharts.GradientColorObject | Highch
 
 // async function
 const getRawPPS2MultiSinglePortLogs = async (req: IPPS2MultiSinglePortLogRequest): Promise<IPPS2MultiSinglePortLogResponse> => {
-  const url = `${process.env.TIC_BASE_URL}/multi_single_port_log_detail`
+  const url = `${process.env.TIC_BASE_URL}/v1/multi_single_port_log_detail`
   const res = await fetch(url, {
     method: 'POST',
     headers: {

@@ -8,10 +8,13 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt'
 import style from '../../../components/scollbar/styles.module.css'
 
 interface DropdownMenuButtonProps {
+  initialCheckedData?: any[]
   data: any[]
   disabled: boolean
   onConfirm: (filterValues: any[]) => void
   onCancel: () => void
+  onActivateIcon?: JSX.Element
+  icon?: JSX.Element
 }
 
 interface DropdownItem {
@@ -19,9 +22,26 @@ interface DropdownItem {
   checked: boolean
 }
 
-const DropdownMenu = ({ data, disabled, onConfirm, onCancel }: DropdownMenuButtonProps): JSX.Element => {
+const DropdownMenu = ({
+  initialCheckedData,
+  data,
+  disabled,
+  onConfirm,
+  onCancel,
+  onActivateIcon = <FilterAltIcon />,
+  icon = <FilterListIcon />,
+}: DropdownMenuButtonProps): JSX.Element => {
   const [isOpen, setIsOpen] = useState(false)
-  const [visibleData, setVisibleData] = useState<DropdownItem[]>(data.map((item) => ({ value: item, checked: false })))
+  const [visibleData, setVisibleData] = useState<DropdownItem[]>(
+    data.map((item) => {
+      if (initialCheckedData !== undefined) {
+        if (initialCheckedData?.includes(item)) {
+          return { value: item, checked: true }
+        }
+      }
+      return { value: item, checked: false }
+    })
+  )
   const [isAllChecked, setIsAllChecked] = useState<boolean>(false)
   const [filterValue, setFilterValue] = useState<string>('')
 
@@ -109,7 +129,7 @@ const DropdownMenu = ({ data, disabled, onConfirm, onCancel }: DropdownMenuButto
   }
 
   return (
-    <>
+    <div className="relative">
       <button
         disabled={disabled}
         className={`p-2.5 text-center 
@@ -119,12 +139,12 @@ const DropdownMenu = ({ data, disabled, onConfirm, onCancel }: DropdownMenuButto
         type="button`}
         onClick={toggleMenu}
       >
-        {visibleData.some((item: DropdownItem) => item.checked) ? <FilterAltIcon /> : <FilterListIcon />}
+        {visibleData.some((item: DropdownItem) => item.checked) ? onActivateIcon : icon}
       </button>
       {isOpen && (
         <ul
           role="menu"
-          className={`${style['custom-scrollbar']} absolute z-10 top-12 min-w-[180px] min-h-[150px] max-h-[250px] overflow-auto border bg-white shadow-lg focus:outline-none`}
+          className={`${style['custom-scrollbar']} absolute z-50 top-12 min-w-[180px] min-h-[150px] max-h-[250px] overflow-auto border bg-white shadow-lg focus:outline-none`}
         >
           {/* filter input & all checkbox */}
           <div className="sticky top-0 z-9 bg-white px-2 pt-2">
@@ -203,7 +223,7 @@ const DropdownMenu = ({ data, disabled, onConfirm, onCancel }: DropdownMenuButto
           </div>
         </ul>
       )}
-    </>
+    </div>
   )
 }
 

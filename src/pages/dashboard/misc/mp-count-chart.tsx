@@ -132,7 +132,7 @@ function processMPLogs(data: IMPLog[], timeRange: ITimeRange): IMPCountOfIC[] {
 
   data.forEach((d) => {
     const ic = d.ic
-    if (ic !== 'PS5302' && ic !== 'PS5027' && !d.fwVersion.startsWith('VADL')) {
+    if (!ic.startsWith('PS5')) {
       return
     }
 
@@ -166,7 +166,7 @@ function processMPLogs(data: IMPLog[], timeRange: ITimeRange): IMPCountOfIC[] {
 }
 
 async function getRawMPLogs(req: IMPLogRequest): Promise<IMPLogResponse> {
-  const res = await fetch(`${process.env.TIC_BASE_URL}/mp_logs`, {
+  const res = await fetch(`${process.env.TIC_BASE_URL}/v1/mp_logs`, {
     method: 'POST',
     body: JSON.stringify(req),
   })

@@ -1,4 +1,4 @@
-import { GetMPTaskView as dGetMPTaskView } from '../data/mp'
+import { GetMPTaskView as dGetMPTaskView, GetMPPackage as dGetMPPackage } from '../data/mp'
 import type { IMPTaskViewRequest } from '../data/mp'
 
 interface IMPTaskTableView {
@@ -99,6 +99,31 @@ async function GetMPTaskView(req: IMPTaskViewRequest): Promise<IMPTaskTableView[
   return ret
 }
 
-export { GetMPTaskView }
+async function GetMPPackage(pjid: number): Promise<Blob> {
+  const resp = await dGetMPPackage(pjid)
+  return base64ToBlob(resp.result.mpPackageInBase64, 'application/zip')
+}
+
+function base64ToBlob(base64: string, contentType = '', sliceSize = 512): Blob {
+  const byteCharacters = window.atob(base64)
+  const byteArrays = []
+
+  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+    const slice = byteCharacters.slice(offset, offset + sliceSize)
+
+    const byteNumbers = new Array(slice.length)
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i)
+    }
+
+    const byteArray = new Uint8Array(byteNumbers)
+    byteArrays.push(byteArray)
+  }
+
+  const blob = new Blob(byteArrays, { type: contentType })
+  return blob
+}
+
+export { GetMPTaskView, GetMPPackage }
 
 export type { IMPTaskTableView }

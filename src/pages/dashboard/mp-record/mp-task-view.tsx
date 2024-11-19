@@ -17,7 +17,17 @@ import ToolBar from './mp-task-view-toolbar'
 // types
 import type { HTMLProps } from 'react'
 import type { IMPTaskTableView } from '../../../biz/mp-record'
-import type { Column, RowData, SortingState, PaginationState, ColumnFiltersState, Row, Table } from '@tanstack/react-table'
+import type {
+  Column,
+  RowData,
+  SortingState,
+  PaginationState,
+  ColumnFiltersState,
+  ColumnPinningState,
+  ColumnOrderState,
+  Row,
+  Table,
+} from '@tanstack/react-table'
 // icons
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp'
@@ -52,7 +62,7 @@ const ContainInArray = (row: Row<IMPTaskTableView>, columnId: string, filterValu
 }
 
 const beautifyDate = (date: string): string => {
-  return moment(date).format('YYYY-MM-DD HH:mm:ss')
+  return moment(date).utcOffset(0).format('YYYY-MM-DD HH:mm:ss')
 }
 
 const beautifyResult = (result: string): JSX.Element => {
@@ -68,13 +78,53 @@ const beautifyResult = (result: string): JSX.Element => {
 }
 
 const formatFwVersion = (fwVersion: string, fwSubVersion: string): string => {
-  if (fwSubVersion === '') {
+  if (fwSubVersion === '' || fwSubVersion === 'fwCommitId') {
     return fwVersion
   }
   return `${fwVersion}-${fwSubVersion}`
 }
-const oneDayBefore = moment().add(-1, 'days').startOf('day').clone().hours(0).minutes(0).seconds(0).milliseconds(0)
 
+const getColumnData = (column: Column<IMPTaskTableView, unknown>): any[] => {
+  if (column !== undefined) {
+    return column.getFacetedRowModel().rows.map((row) => row.getValue(column.id))
+  }
+  return []
+}
+
+const getFilterColumnData = (column: Column<IMPTaskTableView, unknown>): any[] => {
+  const data = getColumnData(column)
+  if (data.length === 0) {
+    return []
+  }
+  // distinct
+  const distinctData = [...new Set(data)]
+  // tidy up
+  for (let i = 0; i < distinctData.length; i++) {
+    if (distinctData[i] === null || distinctData[i] === undefined) {
+      distinctData[i] = 'null'
+    }
+
+    if (distinctData[i] === '') {
+      distinctData[i] = '(empty)'
+    }
+  }
+
+  // sort
+  return distinctData.sort((a, b) => {
+    if (typeof a === 'string' && typeof b === 'string') {
+      return a.localeCompare(b)
+    }
+
+    if (typeof a === 'number' && typeof b === 'number') {
+      return a - b
+    }
+
+    return 0
+  })
+}
+
+// const oneDayBefore = moment().add(-1, 'days').startOf('day').clone().hours(0).minutes(0).seconds(0).milliseconds(0)
+const oneDayBefore = moment().add(-180, 'minutes').clone()
 const columnHelper = createColumnHelper<IMPTaskTableView>()
 const defaultColumns = [
   {
@@ -101,7 +151,7 @@ const defaultColumns = [
   },
   columnHelper.accessor((props) => props.PjId, {
     id: 'PjId',
-    header: () => 'Project ID',
+    header: 'Project ID',
     cell: (info) => info.getValue(),
     meta: {
       filterVariant: 'text',
@@ -114,14 +164,13 @@ const defaultColumns = [
     cell: (info) => info.getValue(),
     filterFn: ContainInArray,
   }),
-
-  columnHelper.accessor((props) => props.IP, { id: 'Ip', header: 'IP', cell: (info) => info.getValue(), filterFn: ContainInArray }),
   columnHelper.accessor((props) => props.ToolName, {
     id: 'ToolName',
     header: 'Category',
     cell: (info) => info.getValue(),
     filterFn: ContainInArray,
   }),
+  columnHelper.accessor((props) => props.IP, { id: 'Ip', header: 'IP', cell: (info) => info.getValue(), filterFn: ContainInArray }),
   columnHelper.accessor((props) => props.IC, { id: 'Ic', header: 'IC', cell: (info) => info.getValue(), filterFn: ContainInArray }),
   columnHelper.accessor((props) => props.ControllerID, {
     id: 'ControllerID',
@@ -198,15 +247,60 @@ const defaultColumns = [
 ]
 
 const MPTaskView = (): JSX.Element => {
+  const defaultPinColIDs = ['IdleStartTime']
   const [tasks, setTasks] = useState<IMPTaskTableView[]>([])
   const [sorting, setSorting] = useState<SortingState>([])
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = useState({})
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([])
+  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
+    left: [],
+    right: [...defaultPinColIDs],
+  })
   const [loading, setLoading] = useState(true)
+  const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null)
+
+  const table = useReactTable({
+    data: tasks,
+    columns: defaultColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(), // client side filtering
+    getSortedRowModel: getSortedRowModel(), // client-side sorting
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting, // optionally control sorting state in your own scope for easy access
+    onPaginationChange: setPagination,
+    onColumnFiltersChange: setColumnFilters,
+    onRowSelectionChange: setRowSelection,
+    onColumnOrderChange: setColumnOrder,
+    onColumnPinningChange: setColumnPinning,
+    state: {
+      pagination,
+      sorting,
+      columnFilters,
+      rowSelection,
+      columnOrder,
+      columnPinning,
+    },
+  })
 
   useEffect(() => {
     // default one day before
+    // GetMPPackage(249545)
+    //   .then((res) => {
+    //     const url = URL.createObjectURL(res)
+    //     const a = document.createElement('a')
+    //     a.href = url
+    //     a.download = 'test.zip'
+    //     document.body.appendChild(a)
+    //     a.click()
+    //     document.body.removeChild(a)
+    //     URL.revokeObjectURL(url)
+    //   })
+    //   .catch((e) => {
+    //     console.error(e)
+    //   })
+
     const treq = { createTimeFrom: oneDayBefore, createTimeTo: moment() }
     GetMPTaskView(treq)
       .then((res) => {
@@ -235,46 +329,6 @@ const MPTaskView = (): JSX.Element => {
       })
   }
 
-  const getColumnData = (columnId: string): any[] => {
-    const column = table.getColumn(columnId)
-    if (column !== undefined) {
-      return column.getFacetedRowModel().rows.map((row) => row.getValue(columnId))
-    }
-    return []
-  }
-
-  const getFilterColumnData = (columnId: string): any[] => {
-    const data = getColumnData(columnId)
-    if (data.length === 0) {
-      return []
-    }
-    // distinct
-    const distinctData = [...new Set(data)]
-    // tidy up
-    for (let i = 0; i < distinctData.length; i++) {
-      if (distinctData[i] === null || distinctData[i] === undefined) {
-        distinctData[i] = 'null'
-      }
-
-      if (distinctData[i] === '') {
-        distinctData[i] = '(empty)'
-      }
-    }
-
-    // sort
-    return distinctData.sort((a, b) => {
-      if (typeof a === 'string' && typeof b === 'string') {
-        return a.localeCompare(b)
-      }
-
-      if (typeof a === 'number' && typeof b === 'number') {
-        return a - b
-      }
-
-      return 0
-    })
-  }
-
   const onFilter = (col: Column<IMPTaskTableView, unknown>, filterValues?: any[]): void => {
     if (filterValues === undefined || filterValues.length === 0) {
       col.setFilterValue([])
@@ -283,43 +337,154 @@ const MPTaskView = (): JSX.Element => {
     col.setFilterValue(filterValues)
   }
 
-  const table = useReactTable({
-    data: tasks,
-    columns: defaultColumns,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(), // client side filtering
-    getSortedRowModel: getSortedRowModel(), // client-side sorting
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting, // optionally control sorting state in your own scope for easy access
-    onPaginationChange: setPagination,
-    onColumnFiltersChange: setColumnFilters,
-    onRowSelectionChange: setRowSelection,
-    // sortingFns: {
-    //   sortStatusFn, //or provide our custom sorting function globally for all columns to be able to use
-    // },
-    state: {
-      pagination,
-      sorting,
-      columnFilters,
-      rowSelection,
-    },
-    // autoResetPageIndex: false, // turn off page index reset when sorting or filtering - default on/true
-    // enableMultiSort: false, // Don't allow shift key to sort multiple columns - default on/true
-    // enableSorting: false, // - default on/true
-    // enableSortingRemoval: false, //Don't allow - default on/true
-    // isMultiSortEvent: (e) => true, //Make all clicks multi-sort - default requires `shift` key
-    // maxMultiSortColCount: 3, // only allow 3 columns to be sorted at once - default is Infinity
-  })
+  const getTable = (isMain: boolean): JSX.Element => {
+    return (
+      <div className={`${isMain ? '' : 'sticky right-0 z-10 shadow-pinningTableShadow'}`}>
+        <table className="border-separate border-spacing-0">
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <th
+                      key={header.id}
+                      className={`sticky z-10 top-0 text-base leading-10 font-bold bg-white px-2 text-center whitespace-nowrap border-b border-black h-12`}
+                      hidden={isMain ? header.column.getIsPinned() !== false : header.column.getIsPinned() !== 'right'}
+                    >
+                      <div className="inline-flex items-center">
+                        <div
+                          className={header.column.getCanSort() ? 'cursor-pointer select-none' : ''}
+                          onClick={header.column.getToggleSortingHandler()}
+                          title={
+                            header.column.getCanSort()
+                              ? header.column.getNextSortingOrder() === 'asc'
+                                ? 'Sort ascending'
+                                : header.column.getNextSortingOrder() === 'desc'
+                                ? 'Sort descending'
+                                : 'Clear sort'
+                              : undefined
+                          }
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        </div>
+                        {/* fileter */}
+                        {(() => {
+                          if (!header.column.getCanFilter()) {
+                            return null
+                          }
+                          const c = table.getColumn(header.column.id)
+                          if (c === undefined) {
+                            return null
+                          }
+                          const ddData = getFilterColumnData(c)
+                          return (
+                            <DropdownMenu
+                              onConfirm={(values: any[]) => {
+                                onFilter(header.column, values)
+                              }}
+                              onCancel={() => {
+                                onFilter(header.column)
+                              }}
+                              disabled={ddData.length === 0}
+                              data={ddData}
+                            ></DropdownMenu>
+                          )
+                        })()}
+                        {/* sorting icons */}
+                        {{
+                          asc: <ArrowDropUpIcon />,
+                          desc: <ArrowDropDownIcon />,
+                        }[header.column.getIsSorted() as string] ?? (
+                          // default icon size,
+                          <ArrowDropUpIcon
+                            sx={{
+                              color: 'transparent',
+                            }}
+                          />
+                        )}
+                      </div>
+                    </th>
+                  )
+                })}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row, rowIndex) => (
+              <tr
+                key={row.id}
+                className={`${row.getIsSelected() ? 'bg-indigo-100' : 'bg-white'} ${hoveredRowIndex === rowIndex ? 'bg-indigo-50' : ''} `}
+                onDoubleClick={(e) => {
+                  row.getToggleSelectedHandler()(e)
+                }}
+                onMouseEnter={() => {
+                  setHoveredRowIndex(rowIndex)
+                }}
+                onMouseLeave={() => {
+                  setHoveredRowIndex(null)
+                }}
+              >
+                {row.getVisibleCells().map((cell) => {
+                  return (
+                    <td
+                      key={cell.id}
+                      className={`border-t border-b border-gray-300 px-2 text-left bg-inherit whitespace-nowrap`}
+                      hidden={isMain ? cell.column.getIsPinned() !== false : cell.column.getIsPinned() !== 'right'}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              {isMain ? (
+                <>
+                  <td className="sticky z-20 bottom-0 text-base leading-10 font-bold bg-white px-2 text-left whitespace-nowrap">
+                    <IndeterminateCheckbox
+                      {...{
+                        checked: table.getIsAllPageRowsSelected(),
+                        indeterminate: table.getIsSomePageRowsSelected(),
+                        onChange: table.getToggleAllPageRowsSelectedHandler(),
+                      }}
+                    />
+                  </td>
+                  <td
+                    className="sticky z-20 bottom-0 text-base leading-10 font-bold bg-white px-2 text-left whitespace-nowrap"
+                    colSpan={table.getAllColumns().length - 1}
+                  >
+                    Select Page Rows ({table.getRowModel().rows.length})
+                  </td>
+                </>
+              ) : (
+                <td
+                  className="sticky z-20 bottom-0 text-base leading-10 font-bold bg-white px-2 text-left whitespace-nowrap"
+                  colSpan={table.getAllColumns().length}
+                >
+                  {' '}
+                </td>
+              )}
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col justify-center w-[95%] bg-white shadow p-2">
       {/* tool bar */}
       <ToolBar
+        title="MP Task View"
         StartDate={oneDayBefore}
         EndDate={moment()}
         onDateButtonClick={(s, e) => {
           onDateButtonClick(s, e)
         }}
+        defaultPinColumnIDs={defaultPinColIDs}
+        pinColumnsDataSet={table.getAllColumns()}
       ></ToolBar>
       {/* loading gif */}
       {loading ? (
@@ -331,105 +496,12 @@ const MPTaskView = (): JSX.Element => {
       ) : null}
       {/* table */}
       <div className={`${style['custom-scrollbar']} overflow-auto h-[560px]`}>
-        <table className="border-separate border-spacing-0">
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="sticky z-10 top-0 text-base leading-10 font-bold bg-white px-2 text-center whitespace-nowrap border-b border-black"
-                  >
-                    <div className="inline-flex items-center">
-                      <div
-                        className={header.column.getCanSort() ? 'cursor-pointer select-none' : ''}
-                        onClick={header.column.getToggleSortingHandler()}
-                        title={
-                          header.column.getCanSort()
-                            ? header.column.getNextSortingOrder() === 'asc'
-                              ? 'Sort ascending'
-                              : header.column.getNextSortingOrder() === 'desc'
-                              ? 'Sort descending'
-                              : 'Clear sort'
-                            : undefined
-                        }
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </div>
-                      {/* fileter */}
-                      {(() => {
-                        if (!header.column.getCanFilter()) {
-                          return null
-                        }
-                        const ddData = getFilterColumnData(header.column.id)
-                        return (
-                          <DropdownMenu
-                            onConfirm={(values: any[]) => {
-                              onFilter(header.column, values)
-                            }}
-                            onCancel={() => {
-                              onFilter(header.column)
-                            }}
-                            disabled={ddData.length === 0}
-                            data={ddData}
-                          ></DropdownMenu>
-                        )
-                      })()}
-                      {/* sorting icons */}
-                      {{
-                        asc: <ArrowDropUpIcon />,
-                        desc: <ArrowDropDownIcon />,
-                      }[header.column.getIsSorted() as string] ?? (
-                        // default icon size,
-                        <ArrowDropUpIcon
-                          sx={{
-                            color: 'transparent',
-                          }}
-                        />
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className={`${row.getIsSelected() ? 'bg-indigo-50' : ''}`}
-                onClick={(e) => {
-                  row.getToggleSelectedHandler()(e)
-                }}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="border-t border-b border-gray-300 px-2 text-left">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td className="sticky z-10 bottom-0 text-base leading-10 font-bold bg-white px-2 text-left whitespace-nowrap">
-                <IndeterminateCheckbox
-                  {...{
-                    checked: table.getIsAllPageRowsSelected(),
-                    indeterminate: table.getIsSomePageRowsSelected(),
-                    onChange: table.getToggleAllPageRowsSelectedHandler(),
-                  }}
-                />
-              </td>
-              <td
-                className="sticky z-10 bottom-0 text-base leading-10 font-bold bg-white px-2 text-left whitespace-nowrap"
-                colSpan={table.getAllColumns().length - 1}
-              >
-                Select Page Rows ({table.getRowModel().rows.length})
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+        <div className="flex">
+          {/* main table */}
+          {getTable(true)}
+          {/* right pinning table */}
+          {getTable(false)}
+        </div>
       </div>
       {/* Pagination */}
       <div className="flex items-center gap-2 justify-end">

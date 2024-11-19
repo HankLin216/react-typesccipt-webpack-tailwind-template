@@ -5,6 +5,7 @@ interface ButtonProps extends HTMLProps<HTMLInputElement> {
   onClick: () => void
   className?: string
   disabled?: boolean
+  tooltip?: string
 }
 
 export default ButtonProps

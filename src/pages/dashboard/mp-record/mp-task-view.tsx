@@ -258,7 +258,6 @@ const MPTaskView = (): JSX.Element => {
     right: [...defaultPinColIDs],
   })
   const [loading, setLoading] = useState(true)
-  const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null)
 
   const table = useReactTable({
     data: tasks,
@@ -412,15 +411,9 @@ const MPTaskView = (): JSX.Element => {
             {table.getRowModel().rows.map((row, rowIndex) => (
               <tr
                 key={row.id}
-                className={`${row.getIsSelected() ? 'bg-indigo-100' : 'bg-white'} ${hoveredRowIndex === rowIndex ? 'bg-indigo-50' : ''} `}
+                className={`${row.getIsSelected() ? 'bg-indigo-100' : 'bg-white'} hover:bg-indigo-50 `}
                 onDoubleClick={(e) => {
                   row.getToggleSelectedHandler()(e)
-                }}
-                onMouseEnter={() => {
-                  setHoveredRowIndex(rowIndex)
-                }}
-                onMouseLeave={() => {
-                  setHoveredRowIndex(null)
                 }}
               >
                 {row.getVisibleCells().map((cell) => {

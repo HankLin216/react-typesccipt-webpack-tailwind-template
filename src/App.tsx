@@ -9,6 +9,7 @@ const App = (): JSX.Element => {
   useEffect(() => {
     // add class to body element
     document.body.classList.add('bg-lightPrimary')
+    document.title = 'TIC-mini'
   }, [])
 
   return (

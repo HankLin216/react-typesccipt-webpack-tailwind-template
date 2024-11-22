@@ -1,8 +1,8 @@
-import { GetMPTaskView as dGetMPTaskView, GetMPPackage as dGetMPPackage } from '../data/mp'
-import type { IMPTaskViewRequest } from '../data/mp'
+import { GetMPTaskView as dGetMPTaskView, GetMPDRepots as dGetMPDRepots, GetMPPackage as dGetMPPackage } from '../data/mp'
+import type { IMPTaskViewRequest, IMPDReport, IMPDReportRequest } from '../data/mp'
 
 interface IMPTaskTableView {
-  PjId: number
+  PjId: string
   ForcePcieFlowName: string
   ForceBootCodeName: string
   UserRealName: string
@@ -14,13 +14,18 @@ interface IMPTaskTableView {
   MpErrorCode: string
   MpResultName: string
   MpEnvironmentName: string
-  TkId: number
+  TkId: string
   IdleStartTime: string
   PrepareStartTime: string
   TestEndTime: string
   ToolName: string
   TestStatusName: string
   TestResultName: string
+}
+
+interface IGetDReportInfo {
+  pjId: string
+  tkId: string
 }
 
 const RenameToolName = (toolName: string): string => {
@@ -64,7 +69,7 @@ async function GetMPTaskView(req: IMPTaskViewRequest): Promise<IMPTaskTableView[
   const resp = await dGetMPTaskView(req)
 
   for (const task of resp.tasks) {
-    const tinfos = task.mpLog.testerName.split('_')
+    const tinfos = task.testerName.split('_')
     if (tinfos.length < 3) {
       continue
     }
@@ -73,29 +78,56 @@ async function GetMPTaskView(req: IMPTaskViewRequest): Promise<IMPTaskTableView[
     const ip = tinfos[1]
 
     const view: IMPTaskTableView = {
-      PjId: task.mpProject.pjId,
-      ForcePcieFlowName: RenameForcePCIeFlowName(task.mpProject.forcePcieFlowName),
-      ForceBootCodeName: RenameForceBootCodeName(task.mpProject.forceBootCodeName),
-      UserRealName: task.mpLog.userRealName,
+      PjId: task.pjId,
+      ForcePcieFlowName: RenameForcePCIeFlowName(task.forcePcieFlowName),
+      ForceBootCodeName: RenameForceBootCodeName(task.forceBootCodeName),
+      UserRealName: task.userRealName,
       IP: ip,
       ControllerID: ctrlId,
-      IC: task.mpLog.ic,
-      FwVersion: task.mpLog.fwVersion,
-      FwSubVersion: task.mpLog.fwSubVersion,
-      MpErrorCode: task.mpLog.mpErrorCode,
-      MpResultName: task.mpLog.mpResultName,
-      MpEnvironmentName: task.mpLog.mpEnvironmentName,
-      TkId: task.mpTask.tkId,
-      IdleStartTime: task.mpTask.idleStartTime,
-      PrepareStartTime: task.mpTask.prepareStartTime,
-      TestEndTime: task.mpTask.testEndTime,
-      ToolName: RenameToolName(task.mpTask.toolName),
-      TestStatusName: task.mpTask.testStatusName,
-      TestResultName: task.mpTask.testResultName,
+      IC: task.ic,
+      FwVersion: task.fwVersion,
+      FwSubVersion: task.fwSubVersion,
+      MpErrorCode: task.mpErrorCode,
+      MpResultName: task.mpResultName,
+      MpEnvironmentName: task.mpEnvironmentName,
+      TkId: task.tkId,
+      IdleStartTime: task.idleStartTime,
+      PrepareStartTime: task.prepareStartTime,
+      TestEndTime: task.testEndTime,
+      ToolName: RenameToolName(task.toolName),
+      TestStatusName: task.testStatusName,
+      TestResultName: task.testResultName,
     }
     ret.push(view)
   }
 
+  return ret
+}
+
+async function GetMPDRepots(req: IGetDReportInfo[]): Promise<IMPDReport[]> {
+  const ret: IMPDReport[] = []
+  const reqs: IMPDReportRequest = {
+    report_requests: [],
+  }
+  for (const r of req) {
+    reqs.report_requests.push({ pjId: parseInt(r.pjId), tkId: parseInt(r.tkId) })
+  }
+  const resp = await dGetMPDRepots(reqs)
+  for (const r of resp.reports) {
+    const ms: IMPDReport['mpSequenceDReports'] = []
+    for (const s of r.mpSequenceDReports) {
+      ms.push({
+        sequence: s.sequence,
+        logInBase64: s.logInBase64,
+        path: s.path,
+      })
+    }
+    ret.push({
+      pjId: r.pjId,
+      tkId: r.tkId,
+      mpSequenceDReports: ms,
+    })
+  }
   return ret
 }
 
@@ -124,6 +156,6 @@ function base64ToBlob(base64: string, contentType = '', sliceSize = 512): Blob {
   return blob
 }
 
-export { GetMPTaskView, GetMPPackage }
+export { GetMPTaskView, GetMPPackage, GetMPDRepots }
 
-export type { IMPTaskTableView }
+export type { IMPTaskTableView, IGetDReportInfo }

@@ -8,17 +8,11 @@ interface IMPTaskViewResponse {
 }
 
 interface IMPTaskView {
-  mpTask: IMPTask
-  mpProject: IMPProject
-  mpLog: IMPLog
-}
-
-interface IMPTask {
-  tkId: number
-  tlId: number
-  mainTkId: number
-  testStatus: number
-  testResult: number
+  tkId: string
+  tlId: string
+  mainTkId: string
+  testStatus: string
+  testResult: string
   testResultPath: string
   toolExtraParams: string
   idleStartTime: string
@@ -27,25 +21,19 @@ interface IMPTask {
   toolName: string
   testStatusName: string
   testResultName: string
-}
-
-interface IMPProject {
-  pjId: number
+  pjId: string
   settingFile: string
   memo: string
   forcePcieFlowName: string
   forceBootCodeName: string
-}
-
-interface IMPLog {
-  mpLogId: number
   userRealName: string
   testerName: string
   ic: string
   fwVersion: string
   fwSubVersion: string
-  mpEnvironment: number
-  mpResult: number
+  mpLogId: string
+  mpEnvironment: string
+  mpResult: string
   mpErrorCode: string
   mpResultName: string
   mpEnvironmentName: string
@@ -56,6 +44,31 @@ interface IMPPackageSlice {
 }
 interface IMPPackageResponse {
   result: IMPPackageSlice
+}
+
+interface IMPDReportRequest {
+  report_requests: IMPDReportRequestInfo[]
+}
+
+interface IMPDReportRequestInfo {
+  pjId: number
+  tkId: number
+}
+
+interface IMPDReportResponse {
+  reports: IMPDReport[]
+}
+
+interface IMPDReport {
+  pjId: string
+  tkId: string
+  mpSequenceDReports: IMPSequenceDReport[]
+}
+
+interface IMPSequenceDReport {
+  sequence: string
+  logInBase64: string
+  path: string
 }
 
 async function GetMPTaskView({ createTimeFrom, createTimeTo }: IMPTaskViewRequest): Promise<IMPTaskViewResponse> {
@@ -120,6 +133,34 @@ async function GetMPPackage(pjid: number): Promise<IMPPackageResponse> {
   return ret
 }
 
-export { GetMPTaskView, GetMPPackage }
+async function GetMPDRepots(req: IMPDReportRequest): Promise<IMPDReportResponse> {
+  const url = new URL(`${process.env.TIC_BASE_URL}/v1/mp_log/dreports`)
+  const res = await fetch(url.toString(), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(req),
+  })
 
-export type { IMPTaskViewRequest, IMPTaskViewResponse, IMPTaskView, IMPTask, IMPProject, IMPLog }
+  if (!res.ok) {
+    throw new Error(`Failed to fetch the data, status code: ${res.status}, message: ${res.statusText}`)
+  }
+
+  return await res.json()
+}
+
+export { GetMPTaskView, GetMPPackage, GetMPDRepots }
+
+export type {
+  IMPTaskViewRequest,
+  IMPTaskViewResponse,
+  IMPTaskView,
+  IMPDReportRequest,
+  IMPDReportResponse,
+  IMPDReport,
+  IMPDReportRequestInfo,
+  IMPSequenceDReport,
+  IMPPackageSlice,
+  IMPPackageResponse,
+}

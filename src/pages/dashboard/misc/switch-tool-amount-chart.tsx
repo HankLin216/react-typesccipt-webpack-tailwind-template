@@ -299,7 +299,7 @@ async function getRawListProjectProgress(req: IListProjectProgressRequest): Prom
 
 const asyncFetchData = async (range: ITimeRange): Promise<ISwitchToolAmountChartData> => {
   // split time range into parts that each part is 10 days
-  const timeRanges: ITimeRange[] = splitTimeRange(range, 10)
+  const timeRanges: ITimeRange[] = splitTimeRange(range, 10, 'days')
 
   const ret: ISwitchToolAmountChartData = {
     amountOfICByWeeks: [],

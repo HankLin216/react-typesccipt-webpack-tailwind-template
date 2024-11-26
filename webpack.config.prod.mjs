@@ -1,5 +1,6 @@
 import { merge } from 'webpack-merge'
 import baseConfig from './webpack.config.base.mjs'
+import Dotenv from 'dotenv-webpack';
 
 const prodWebpackConfig = merge(baseConfig, {
   mode: 'production',
@@ -17,6 +18,11 @@ const prodWebpackConfig = merge(baseConfig, {
       },
     },
   },
+  plugins: [
+    new Dotenv({
+      path: './.env',
+    }),
+  ],
 });
 
 export default prodWebpackConfig

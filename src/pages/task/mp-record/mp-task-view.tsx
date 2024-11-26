@@ -537,6 +537,13 @@ const MPTaskView = (): JSX.Element => {
         StartDate={oneDayBefore}
         EndDate={moment()}
         onDateButtonClick={(s, e) => {
+          // reset all filters
+          table.resetColumnFilters()
+
+          // reset all selection
+          table.resetRowSelection()
+
+          // update the date
           onDateButtonClick(s, e)
         }}
         onLogButtonClick={onLogButtonClick}

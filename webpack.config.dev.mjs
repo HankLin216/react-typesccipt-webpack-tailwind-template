@@ -1,5 +1,6 @@
 import { merge } from 'webpack-merge';
 import baseConfig from './webpack.config.base.mjs';
+import Dotenv from 'dotenv-webpack';
 
 const devWebpackConfig = merge(baseConfig, {
   mode: 'development',
@@ -16,7 +17,11 @@ const devWebpackConfig = merge(baseConfig, {
     open: true,
     historyApiFallback: true,
   },
-  plugins: [],
+  plugins: [
+    new Dotenv({
+      path: './.env.development',
+    }),
+  ],
 });
 
 export default devWebpackConfig;

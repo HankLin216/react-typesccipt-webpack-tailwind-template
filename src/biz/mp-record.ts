@@ -87,16 +87,16 @@ async function GetMPTaskView(req: IMPTaskViewRequest): Promise<IMPTaskTableView[
       IC: task.ic,
       FwVersion: task.fwVersion,
       FwSubVersion: task.fwSubVersion,
-      MpErrorCode: task.mpErrorCode,
+      MpErrorCode: task.mpErrorCode !== '' ? task.mpErrorCode : 'None',
       MpResultName: task.mpResultName,
-      MpEnvironmentName: task.mpEnvironmentName,
+      MpEnvironmentName: task.mpEnvironmentName !== '' ? task.mpEnvironmentName : 'None',
       TkId: task.tkId,
       IdleStartTime: task.idleStartTime,
       PrepareStartTime: task.prepareStartTime,
       TestEndTime: task.testEndTime,
       ToolName: RenameToolName(task.toolName),
       TestStatusName: task.testStatusName,
-      TestResultName: task.testResultName,
+      TestResultName: task.testResultName !== '' ? task.testResultName : 'None',
     }
     ret.push(view)
   }

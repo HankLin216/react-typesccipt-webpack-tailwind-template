@@ -73,7 +73,7 @@ const beautifyDate = (date: string): string => {
 }
 
 const beautifyResult = (result: string): JSX.Element => {
-  let className = 'text-gray-400-400'
+  let className = 'text-gray-400'
   if (result === 'Pass') {
     className = 'text-green-400'
   } else if (result === 'Fail') {
@@ -86,6 +86,20 @@ const beautifyResult = (result: string): JSX.Element => {
     className = 'text-gray-400'
   }
   return <span className={`${className}`}>{result}</span>
+}
+
+const beautifyStatus = (status: string): JSX.Element => {
+  let className = 'text-gray-400'
+  if (status === 'Idle') {
+    className = 'text-blue-400'
+  } else if (status === 'Disconnected') {
+    className = 'text-red-400'
+  } else if (status === 'Finished') {
+    className = 'text-green-400'
+  } else if (status === 'Prepare') {
+    className = 'text-orange-400'
+  }
+  return <span className={`${className}`}>{status}</span>
 }
 
 const formatFwVersion = (fwVersion: string, fwSubVersion: string): string => {
@@ -194,7 +208,7 @@ const defaultColumns = [
   columnHelper.accessor((props) => props.TestStatusName, {
     id: 'TestStatusName',
     header: 'Test Status',
-    cell: (info) => info.getValue(),
+    cell: (info) => beautifyStatus(info.getValue()),
     filterFn: ContainInArray,
   }),
   columnHelper.accessor((props) => props.TestResultName, {

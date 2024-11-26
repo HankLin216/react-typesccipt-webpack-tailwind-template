@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import {
   createColumnHelper,
   flexRender,
@@ -14,6 +14,8 @@ import DropdownMenu from './mp-task-view-dropdown-menu'
 import Continuous from '../../../components/loading/continuous'
 import ToolBar from './mp-task-view-toolbar'
 import Pagination from './mp-task-view-pagination'
+// store
+import { MPRecordContext } from '../../../store/task/mp-record-provider'
 // types
 import type { HTMLProps } from 'react'
 import type { IMPTaskTableView, IGetDReportInfo } from '../../../biz/mp-record'
@@ -41,6 +43,9 @@ declare module '@tanstack/react-table' {
     filterVariant?: 'text' | 'range' | 'select'
   }
 }
+
+const TABLE_WARPPER_HEIGHT_TAILWIND = `h-[600px]`
+const TABLE_LOADING_HEIGHT_TAILWIND = `h-[500px]`
 
 const ContainInArray = (row: Row<IMPTaskTableView>, columnId: string, filterValue: any): boolean => {
   if (filterValue === null || filterValue === undefined) {
@@ -72,8 +77,12 @@ const beautifyResult = (result: string): JSX.Element => {
     className = 'text-green-400'
   } else if (result === 'Fail') {
     className = 'text-red-400'
-  } else {
+  } else if (result === 'Abnormal') {
     className = 'text-yellow-400'
+  } else if (result === 'prepare') {
+    className = 'text-orange-400'
+  } else if (result === 'Interrupted') {
+    className = 'text-gray-400'
   }
   return <span className={`${className}`}>{result}</span>
 }
@@ -255,6 +264,7 @@ const MPTaskView = (): JSX.Element => {
     right: [...defaultPinColIDs],
   })
   const [loading, setLoading] = useState(true)
+  const ctx = useContext(MPRecordContext)
 
   const table = useReactTable({
     data: tasks,
@@ -342,7 +352,41 @@ const MPTaskView = (): JSX.Element => {
 
     GetMPDRepots(reqs)
       .then((res) => {
-        console.log(res)
+        const rs = []
+        for (const r of res) {
+          let to: IMPTaskTableView | undefined
+          for (const o of table.getSelectedRowModel().rows) {
+            if (r.tkId === o.original.TkId) {
+              to = o.original
+            }
+          }
+
+          if (to === undefined) {
+            continue
+          }
+
+          let fw = to.FwVersion
+          if (to.FwSubVersion !== '') {
+            fw += `-${to.FwSubVersion}`
+          }
+
+          rs.push({
+            ...r,
+            ControllerID: to.ControllerID,
+            IP: to.IP,
+            FwVersion: fw,
+            Result: to.TestResultName,
+            ErrorCode: to.MpErrorCode,
+            IC: to.IC,
+          })
+        }
+
+        // order rs by ip
+        rs.sort((a, b) => {
+          return a.IP.localeCompare(b.IP)
+        })
+
+        ctx.setDReports(rs)
       })
       .catch((e) => {
         console.error(e)
@@ -433,7 +477,7 @@ const MPTaskView = (): JSX.Element => {
             {table.getRowModel().rows.map((row, _) => (
               <tr
                 key={row.id}
-                className={`${row.getIsSelected() ? 'bg-indigo-100' : 'bg-white'} hover:bg-indigo-50 `}
+                className={`${row.getIsSelected() ? 'bg-indigo-100' : 'bg-white'} hover:bg-indigo-50`}
                 onDoubleClick={(e) => {
                   row.getToggleSelectedHandler()(e)
                 }}
@@ -456,7 +500,7 @@ const MPTaskView = (): JSX.Element => {
             <tr>
               {isMain ? (
                 <>
-                  <td className="sticky z-20 bottom-0 text-base leading-10 font-bold bg-white px-2 text-left whitespace-nowrap">
+                  <td className="sticky bottom-0 text-base leading-10 font-bold bg-white px-2 text-left whitespace-nowrap">
                     <IndeterminateCheckbox
                       {...{
                         checked: table.getIsAllPageRowsSelected(),
@@ -466,7 +510,7 @@ const MPTaskView = (): JSX.Element => {
                     />
                   </td>
                   <td
-                    className="sticky z-20 bottom-0 text-base leading-10 font-bold bg-white px-2 text-left whitespace-nowrap"
+                    className="sticky bottom-0 text-base leading-10 font-bold bg-white px-2 text-left whitespace-nowrap"
                     colSpan={table.getAllColumns().length - 1}
                   >
                     Select Page Rows ({table.getRowModel().rows.length})
@@ -474,11 +518,9 @@ const MPTaskView = (): JSX.Element => {
                 </>
               ) : (
                 <td
-                  className="sticky z-20 bottom-0 text-base leading-10 font-bold px-2 text-left whitespace-nowrap bg-white text-white"
+                  className="sticky bottom-0 text-base leading-10 font-bold px-2 text-left whitespace-nowrap bg-white text-white h-[42px]"
                   colSpan={table.getAllColumns().length}
-                >
-                  {'none'}
-                </td>
+                ></td>
               )}
             </tr>
           </tfoot>
@@ -504,13 +546,15 @@ const MPTaskView = (): JSX.Element => {
       {/* loading gif */}
       {loading ? (
         <div className="relative">
-          <div className="absolute top-[54px] flex justify-center items-center opacity-90 bg-gray-50  h-[500px] w-full z-20">
+          <div
+            className={`absolute top-[54px] flex justify-center items-center opacity-90 bg-gray-50 ${TABLE_LOADING_HEIGHT_TAILWIND} w-full z-20`}
+          >
             <Continuous></Continuous>
           </div>
         </div>
       ) : null}
       {/* table */}
-      <div className={`${style['custom-scrollbar']} overflow-auto h-[600px]`}>
+      <div className={`${style['custom-scrollbar']} overflow-auto ${TABLE_WARPPER_HEIGHT_TAILWIND}`}>
         <div className="flex">
           {/* main table */}
           {getTable(true)}

@@ -132,12 +132,12 @@ const DropdownMenu = ({
       {isOpen && (
         <ul
           role="menu"
-          className={`${style['custom-scrollbar']} absolute z-50 top-12 ${
+          className={`${style['custom-scrollbar']} absolute top-12 ${
             position === 'left' ? 'right-5' : ''
-          } min-w-[180px] min-h-[150px] max-h-[250px] overflow-auto border bg-white shadow-lg focus:outline-none`}
+          } min-w-[180px] min-h-[150px] max-h-[250px] overflow-auto border bg-white shadow-lg focus:outline-none z-50`}
         >
           {/* filter input & all checkbox */}
-          <div className="sticky top-0 z-9 bg-white px-2 pt-2">
+          <div className="sticky top-0 bg-white px-2 pt-2">
             <DebouncedInput
               value={filterValue}
               className="mb-1 w-full"
@@ -157,7 +157,7 @@ const DropdownMenu = ({
               }}
               className={`${
                 visibleData.length !== 0 ? 'cursor-pointer' : ''
-              }  flex w-full text-sm items-center p-1 mt-2 hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100`}
+              }  flex w-full text-sm items-center p-1 mt-2 hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-100 relative`}
             >
               <input
                 disabled={visibleData.length === 0}
@@ -195,7 +195,7 @@ const DropdownMenu = ({
             })}
           </div>
           {/* action button */}
-          <div className="sticky bottom-0 z-9 bg-white flex p-2 justify-end items-center shadow">
+          <div className="sticky bottom-0 bg-white flex p-2 justify-end items-center shadow">
             <Button17
               onClick={() => {
                 onConfirmAction()

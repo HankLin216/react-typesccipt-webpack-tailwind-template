@@ -1,24 +1,59 @@
 /* width */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  width: 8px;
+  height: 8px;
 }
 
 /* Track */
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f1f1f1;
+  background: #f1f1f1;
 }
 
 /* Handle */
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 0px;
-    width: 6px;
+  background: #888;
+  border-radius: 0px;
+  width: 6px;
 }
 
 /* Handle on hover */
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #555;
+  background: #555;
+}
+
+/* the track (progress bar) NOT covered by the handle.
+.custom-scrollbar::-webkit-scrollbar-track-piece {
+   
+}
+*/
+
+/*  the draggable resizing handle that appears at the bottom corner of some elements. 
+.custom-scrollbar::-webkit-resizer {
+    
+}
+*/
+
+/* width */
+.custom-scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+/* Track */
+.custom-scrollbar-thin::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+.custom-scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 0px;
+  width: 6px;
+}
+
+/* Handle on hover */
+.custom-scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 /* the track (progress bar) NOT covered by the handle.

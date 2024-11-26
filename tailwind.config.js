@@ -114,6 +114,7 @@ module.exports = {
         inset: 'inset 0px 18px 22px',
         darkinset: '0px 4px 4px inset',
         pinningTableShadow: '-15px 0 15px -15px',
+        rightSideBarShadow: '15px 0px 15px -15px',
       },
       borderRadius: {
         primary: '20px',

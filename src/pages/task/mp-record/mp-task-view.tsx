@@ -27,6 +27,7 @@ import type {
   ColumnFiltersState,
   ColumnPinningState,
   ColumnOrderState,
+  VisibilityState,
   Row,
   Table,
 } from '@tanstack/react-table'
@@ -128,12 +129,13 @@ const getFilterColumnData = (column: Column<IMPTaskTableView, unknown>): Dropdow
     return a.label.localeCompare(b.label)
   })
 }
-
 const oneDayBefore = moment().add(-1, 'days').startOf('day').clone().hours(0).minutes(0).seconds(0).milliseconds(0)
 const columnHelper = createColumnHelper<IMPTaskTableView>()
 const defaultColumns = [
   {
     id: 'select',
+    enableHiding: false,
+    enableColumnPinning: false,
     header: ({ table }: { table: Table<IMPTaskTableView> }) => (
       <IndeterminateCheckbox
         {...{
@@ -251,8 +253,32 @@ const defaultColumns = [
   }),
 ]
 
+const defaultPinColIDs = ['IdleStartTime']
+const defaultVisibleColIDStates = {
+  select: true,
+  PjId: false,
+  TkId: false,
+  ToolName: true,
+  Ip: true,
+  Ic: true,
+  ControllerID: true,
+  FwVersion: true,
+  TestStatusName: true,
+  TestResultName: true,
+  MpErrorCode: true,
+  MpEnvironmentName: true,
+  ForcePcieFlowName: true,
+  ForceBootCodeName: true,
+  UserRealName: true,
+  IdleStartTime: true,
+  PrepareStartTime: true,
+  TestEndTime: true,
+}
+const defaultVisibleColIDs = Object.keys(defaultVisibleColIDStates).filter(
+  (key) => defaultVisibleColIDStates[key as keyof typeof defaultVisibleColIDStates]
+)
+
 const MPTaskView = (): JSX.Element => {
-  const defaultPinColIDs = ['IdleStartTime']
   const [tasks, setTasks] = useState<IMPTaskTableView[]>([])
   const [sorting, setSorting] = useState<SortingState>([])
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
@@ -263,6 +289,7 @@ const MPTaskView = (): JSX.Element => {
     left: [],
     right: [...defaultPinColIDs],
   })
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(defaultVisibleColIDStates)
   const [loading, setLoading] = useState(true)
   const ctx = useContext(MPRecordContext)
 
@@ -279,6 +306,7 @@ const MPTaskView = (): JSX.Element => {
     onRowSelectionChange: setRowSelection,
     onColumnOrderChange: setColumnOrder,
     onColumnPinningChange: setColumnPinning,
+    onColumnVisibilityChange: setColumnVisibility,
     state: {
       pagination,
       sorting,
@@ -286,6 +314,7 @@ const MPTaskView = (): JSX.Element => {
       rowSelection,
       columnOrder,
       columnPinning,
+      columnVisibility,
     },
   })
 
@@ -549,6 +578,8 @@ const MPTaskView = (): JSX.Element => {
         onLogButtonClick={onLogButtonClick}
         defaultPinColumnIDs={defaultPinColIDs}
         pinColumnsDataSet={table.getAllColumns()}
+        defaultVisibleColumnIDs={defaultVisibleColIDs}
+        visibleColumnsDataSet={table.getAllColumns()}
       ></ToolBar>
       {/* loading gif */}
       {loading ? (

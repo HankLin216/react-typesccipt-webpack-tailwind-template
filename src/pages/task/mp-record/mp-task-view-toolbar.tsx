@@ -8,6 +8,8 @@ import type { Column } from '@tanstack/react-table'
 import type { DropdownItem } from './mp-task-view-dropdown-menu'
 // icons
 import PushPinIcon from '@mui/icons-material/PushPin'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 
 interface ToolBarProps<T> {
   title: string
@@ -15,7 +17,9 @@ interface ToolBarProps<T> {
   EndDate: moment.Moment
   onDateButtonClick: (start: moment.Moment, end: moment.Moment) => void
   defaultPinColumnIDs?: string[]
+  defaultVisibleColumnIDs?: string[]
   pinColumnsDataSet?: Array<Column<T, unknown>>
+  visibleColumnsDataSet?: Array<Column<T, unknown>>
   onLogButtonClick?: () => void
 }
 
@@ -65,6 +69,9 @@ const ToolBar = <T,>(props: ToolBarProps<T>): JSX.Element => {
     }
     // reset the pin
     for (let i = 0; i < pinColumnsDataSet.length; i++) {
+      if (!pinColumnsDataSet[i].getCanPin()) {
+        continue
+      }
       pinColumnsDataSet[i].pin(false)
     }
   }
@@ -78,6 +85,9 @@ const ToolBar = <T,>(props: ToolBarProps<T>): JSX.Element => {
     }
 
     for (let i = 1; i < pinColumnsDataSet.length; i++) {
+      if (!pinColumnsDataSet[i].getCanPin()) {
+        continue
+      }
       // cancel pin
       if (pinColumnsDataSet[i].getIsPinned() !== false) {
         if (!currPinList.includes(pinColumnsDataSet[i].id)) {
@@ -94,6 +104,48 @@ const ToolBar = <T,>(props: ToolBarProps<T>): JSX.Element => {
     }
   }
 
+  const onVisibleConfirm = (currVisibleList: string[], visibleColumnsDataSet: Array<Column<T, unknown>>): void => {
+    if (visibleColumnsDataSet === undefined) {
+      return
+    }
+    if (currVisibleList.length === 0) {
+      onCancelAllPin(visibleColumnsDataSet)
+    }
+
+    for (let i = 1; i < visibleColumnsDataSet.length; i++) {
+      if (!visibleColumnsDataSet[i].getCanHide()) {
+        continue
+      }
+
+      // cancel visible
+      if (visibleColumnsDataSet[i].getIsVisible()) {
+        if (!currVisibleList.includes(visibleColumnsDataSet[i].id)) {
+          visibleColumnsDataSet[i].toggleVisibility(false)
+        }
+      }
+
+      // visible
+      if (!visibleColumnsDataSet[i].getIsVisible()) {
+        if (currVisibleList.includes(visibleColumnsDataSet[i].id)) {
+          visibleColumnsDataSet[i].toggleVisibility(true)
+        }
+      }
+    }
+  }
+
+  const onCancelAllVisible = (visibleColumnsDataSet: Array<Column<T, unknown>>): void => {
+    if (visibleColumnsDataSet === undefined) {
+      return
+    }
+
+    for (let i = 0; i < visibleColumnsDataSet.length; i++) {
+      if (!visibleColumnsDataSet[i].getCanHide()) {
+        continue
+      }
+      visibleColumnsDataSet[i].toggleVisibility(false)
+    }
+  }
+
   return (
     <div>
       {/* first row */}
@@ -102,23 +154,43 @@ const ToolBar = <T,>(props: ToolBarProps<T>): JSX.Element => {
         <div>
           <h4 className="font-bold text-left pl-2 text-lg">{props.title}</h4>
         </div>
-        <div>
+        <div className="flex">
+          {/* visible */}
+          <div>
+            {props.pinColumnsDataSet !== undefined && (
+              <DropdownMenu
+                position="left"
+                data={covert2DropdownItem(props.defaultVisibleColumnIDs ?? [], props.visibleColumnsDataSet ?? [])}
+                disabled={false}
+                onCancel={() => {
+                  onCancelAllVisible(props.visibleColumnsDataSet ?? [])
+                }}
+                onConfirm={(vvs) => {
+                  onVisibleConfirm(vvs, props.visibleColumnsDataSet ?? [])
+                }}
+                icon={<VisibilityOffIcon />}
+                onActivateIcon={<VisibilityIcon />}
+              ></DropdownMenu>
+            )}
+          </div>
           {/* pin */}
-          {props.pinColumnsDataSet !== undefined && (
-            <DropdownMenu
-              position="left"
-              data={covert2DropdownItem(props.defaultPinColumnIDs ?? [], props.pinColumnsDataSet ?? [])}
-              disabled={false}
-              onCancel={() => {
-                onCancelAllPin(props.pinColumnsDataSet ?? [])
-              }}
-              onConfirm={(fvs) => {
-                onPinConfirm(fvs, props.pinColumnsDataSet ?? [])
-              }}
-              icon={<PushPinIcon />}
-              onActivateIcon={<PushPinIcon className="-rotate-45" />}
-            ></DropdownMenu>
-          )}
+          <div>
+            {props.pinColumnsDataSet !== undefined && (
+              <DropdownMenu
+                position="left"
+                data={covert2DropdownItem(props.defaultPinColumnIDs ?? [], props.pinColumnsDataSet ?? [])}
+                disabled={false}
+                onCancel={() => {
+                  onCancelAllPin(props.pinColumnsDataSet ?? [])
+                }}
+                onConfirm={(fvs) => {
+                  onPinConfirm(fvs, props.pinColumnsDataSet ?? [])
+                }}
+                icon={<PushPinIcon />}
+                onActivateIcon={<PushPinIcon className="-rotate-45" />}
+              ></DropdownMenu>
+            )}
+          </div>
         </div>
       </div>
       {/* sec row */}
